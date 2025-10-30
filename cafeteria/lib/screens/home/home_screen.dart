@@ -17,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _categoryController = ScrollController();
   final ScrollController _promoController = ScrollController();
   final ScrollController _recommendController = ScrollController();
+  bool _isLoading = true;
 
   String selectedCategory = "Todos";
 
@@ -29,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
 void initState() {
   super.initState();
   fetchProdutos();
+  _loadData();
   // dá tempo para o Provider nascer
   WidgetsBinding.instance.addPostFrameCallback((_) {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
@@ -40,6 +42,26 @@ void initState() {
     }
   });
 }
+
+Future<void> _loadData() async {
+    try {
+      await fetchProdutos();
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      final userData = userProvider.userData;
+      final userId = userData?['id'];
+      
+      if (userId != null) {
+        await fetchUserFavorites(userId);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   // ==========================
   // API Favoritos
   // ==========================
@@ -154,7 +176,13 @@ void initState() {
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 248, 232, 225),
-      body: CustomScrollView(
+      body: _isLoading 
+        ? const Center(
+            child: CircularProgressIndicator(
+              color: Colors.brown,
+            ),
+          )
+      : CustomScrollView(
         slivers: [
           SliverAppBar(
             pinned: true,

@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 import '../global/user_provider.dart';
 import 'package:provider/provider.dart';
 
-
 class FavoriteScreen extends StatefulWidget {
   const FavoriteScreen({super.key});
 
@@ -17,7 +16,7 @@ class FavoriteScreen extends StatefulWidget {
 
 class _FavoriteScreenState extends State<FavoriteScreen> {
   List<Map<String, dynamic>> favorites = [];
-  bool isLoanding = true;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -28,11 +27,12 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
   // Buscar Favoritos
   Future<void> fetchFavorites() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final userData = userProvider.userData;
     final userId = userProvider.userData?['id'];
-    //print('Seus dados ${userData?['nome']} chegou em Home: $userData');
 
-    if (userId == null) return;  // Como eu chamo a variavel que esta no construtor
+    if (userId == null) {
+      setState(() => isLoading = false);
+      return;
+    }
 
     try {
       final response = await http.get(Uri.parse("http://192.168.0.167:5000/favoritos/$userId"));
@@ -56,10 +56,14 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
       }
     } catch (e) {
       print("Erro ao buscar favoritos: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
-  // Remover Favoritos,
+  // Remover Favoritos
   Future<void> removeFavorite(int favId) async {
     try {
       final response = await http.delete(Uri.parse("http://192.168.0.167:5000/favoritos/$favId"));
@@ -76,7 +80,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
   // Adicionar no Carrinho
   Future<void> addToCart(Map<String, dynamic> item) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final userId = userProvider.userData?['id'];  // Como eu vou trazer para cá <------
+    final userId = userProvider.userData?['id'];
     if (userId == null) return;
 
     try {
@@ -92,7 +96,6 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
 
       if (response.statusCode == 200) {
         final result = json.decode(response.body);
-        //print("API retornou: $result");
 
         setState(() {
           final existingIndex = cartItems.indexWhere((e) => e['id'] == item['id']);
@@ -109,30 +112,36 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
       } else {
         print("Erro ao adicionar no carrinho: ${response.statusCode} - ${response.body}");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Erro ao adicionar no carrinho")),
+          const SnackBar(content: Text("Erro ao adicionar no carrinho")),
         );
       }
     } catch (e) {
       print("Erro ao adicionar no carrinho: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erro ao adicionar no carrinho")),
+        const SnackBar(content: Text("Erro ao adicionar no carrinho")),
       );
     }
   }
 
+  String _formatPrice(dynamic valor) {
+    if (valor == null) return "0,00";
+    double v;
+    if (valor is num) {
+      v = valor.toDouble();
+    } else {
+      v = double.tryParse(valor.toString()) ?? 0.0;
+    }
+    return v.toStringAsFixed(2).replaceAll('.', ',');
+  }
 
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
-    final userData = userProvider.userData;  // Sendo que a variavel foi crianda dentro da build
+    final userData = userProvider.userData;
     final screenWidth = MediaQuery.of(context).size.width;
-    //print('Seus dados chegou aqui ${userData?['name']}: $userData');
-    return Scaffold(
-      backgroundColor: Color.fromARGB(255, 248, 232, 225),
 
-      // ==========================
-      // AppBar igual CartScreen
-      // ==========================
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 248, 232, 225),
       appBar: AppBar(
         backgroundColor: Colors.brown.shade700,
         automaticallyImplyLeading: false,
@@ -156,112 +165,108 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
           ),
         ],
       ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : (favorites.isEmpty
+              ? const Center(
+                  child: Text(
+                    "Nenhum favorito encontrado.",
+                    style: TextStyle(fontSize: 18),
+                  ),
+                )
+              : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Favoritos",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 0, 0, 0),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ...List.generate(favorites.length, (index) {
+                          final item = favorites[index];
+                          bool isSmall = screenWidth < 500;
 
-      // ==========================
-      // Corpo da tela de favoritos
-      // ==========================
-      body: favorites.isEmpty
-          ? const Center(
-              child: Text(
-                "Nenhum favorito encontrado.",
-                style: TextStyle(fontSize: 18),
-              ),
-            )
-          : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Favoritos",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: const Color.fromARGB(255, 0, 0, 0),
-                      ),
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 6,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: isSmall
+                                  ? Column(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: item['imagem'] != null && item['imagem'].isNotEmpty
+                                              ? Image.network(
+                                                  item['imagem'],
+                                                  width: double.infinity,
+                                                  height: 180,
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : Container(
+                                                  width: double.infinity,
+                                                  height: 180,
+                                                  color: Colors.grey[300],
+                                                  child: const Icon(Icons.image, color: Colors.grey),
+                                                ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        _buildFavoriteItemInfo(item, index),
+                                      ],
+                                    )
+                                  : Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: item['imagem'] != null && item['imagem'].isNotEmpty
+                                              ? Image.network(
+                                                  item['imagem'],
+                                                  width: screenWidth * 0.35,
+                                                  height: 180,
+                                                  fit: BoxFit.cover,
+                                                )
+                                              : Container(
+                                                  width: screenWidth * 0.35,
+                                                  height: 180,
+                                                  color: Colors.grey[300],
+                                                  child: const Icon(Icons.image, color: Colors.grey),
+                                                ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(child: _buildFavoriteItemInfo(item, index)),
+                                      ],
+                                    ),
+                            ),
+                          );
+                        }),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    ...List.generate(favorites.length, (index) {
-                      final item = favorites[index];
-                      bool isSmall = screenWidth < 500;
-
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 6,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: isSmall
-                              ? Column(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: item['imagem'] != null && item['imagem'].isNotEmpty
-                                          ? Image.network(
-                                              item['imagem'],
-                                              width: double.infinity,
-                                              height: 180,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Container(
-                                              width: double.infinity,
-                                              height: 180,
-                                              color: Colors.grey[300],
-                                              child: const Icon(Icons.image, color: Colors.grey),
-                                            ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    _buildFavoriteItemInfo(item, index),
-                                  ],
-                                )
-                              : Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: item['imagem'] != null && item['imagem'].isNotEmpty
-                                          ? Image.network(
-                                              item['imagem'],
-                                              width: screenWidth * 0.35,
-                                              height: 180,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : Container(
-                                              width: screenWidth * 0.35,
-                                              height: 180,
-                                              color: Colors.grey[300],
-                                              child: const Icon(Icons.image, color: Colors.grey),
-                                            ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(child: _buildFavoriteItemInfo(item, index)),
-                                  ],
-                                ),
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-            ),
-
-      // ==========================
-      // Bottom navigation
-      // ==========================
+                  ),
+                )),
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.brown.shade700,
         unselectedItemColor: Colors.grey,
         currentIndex: 0,
         onTap: (index) async {
-        if (index == 0) {await Navigator.pushNamed(context, Routes.cart);
-        } else if (index == 1) {Navigator.pushNamed(context, Routes.home);
-        } else if (index == 2) {Navigator.pushNamed(context, Routes.order);
-        }
-      },
-
+          if (index == 0) {
+            await Navigator.pushNamed(context, Routes.cart);
+          } else if (index == 1) {
+            Navigator.pushNamed(context, Routes.home);
+          } else if (index == 2) {
+            Navigator.pushNamed(context, Routes.order);
+          }
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Carrinho'),
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
@@ -305,7 +310,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
               ],
             ),
             Text(
-              "R\$ ${item['valor']?.toStringAsFixed(2).replaceAll('.', ',') ?? "0,00"}",
+              "R\$ ${_formatPrice(item['valor'])}",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.brown.shade700),
             ),
           ],
