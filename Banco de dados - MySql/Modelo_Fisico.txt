@@ -1,0 +1,433 @@
+-- MySQL Workbench Forward Engineering
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- -----------------------------------------------------
+-- Schema new_schema1
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema new_schema1
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `new_schema1` ;
+USE `new_schema1` ;
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Usuario`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Usuario` (
+  `idUsuario` INT NOT NULL AUTO_INCREMENT,
+  `email` VARCHAR(45) NOT NULL,
+  `senha_hash` VARCHAR(255) NOT NULL,
+  `ultimo_login` DATETIME NULL,
+  `data_criacao` DATETIME NULL,
+  `tipo_usuario` ENUM('cliente', 'admin') NULL DEFAULT 'cliente',
+  PRIMARY KEY (`idUsuario`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Administrador`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Administrador` (
+  `idAdministrador` INT NOT NULL,
+  PRIMARY KEY (`idAdministrador`),
+  UNIQUE INDEX `idAdministrador_UNIQUE` (`idAdministrador` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Cadastro_usuario`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Cadastro_usuario` (
+  `idCadastro_usuario` INT NOT NULL AUTO_INCREMENT,
+  `email` VARCHAR(100) NOT NULL,
+  `nome_completo` VARCHAR(100) NULL,
+  `telefone` VARCHAR(20) NULL,
+  `data_nascimento` DATE NOT NULL,
+  `cpf` CHAR(11) NULL,
+  `data_cadastro` DATETIME NULL,
+  `ativo` TINYINT(1) NULL,
+  `Usuario_idUsuario` INT NOT NULL,
+  `Administrador_idAdministrador` INT NOT NULL,
+  PRIMARY KEY (`idCadastro_usuario`, `Usuario_idUsuario`),
+  UNIQUE INDEX `cpf_UNIQUE` (`cpf` ASC) VISIBLE,
+  UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE,
+  INDEX `fk_Cadastro_usuario_Usuario1_idx` (`Usuario_idUsuario` ASC) VISIBLE,
+  INDEX `fk_Cadastro_usuario_Administrador1_idx` (`Administrador_idAdministrador` ASC) VISIBLE,
+  CONSTRAINT `fk_Cadastro_usuario_Usuario1`
+    FOREIGN KEY (`Usuario_idUsuario`)
+    REFERENCES `new_schema1`.`Usuario` (`idUsuario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Cadastro_usuario_Administrador1`
+    FOREIGN KEY (`Administrador_idAdministrador`)
+    REFERENCES `new_schema1`.`Administrador` (`idAdministrador`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Atualizar_senha`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Atualizar_senha` (
+  `idAtualizar_senha` INT NOT NULL AUTO_INCREMENT,
+  `token_hash` VARCHAR(64) NOT NULL,
+  `criado` DATETIME NOT NULL,
+  `expiracao` DATETIME NOT NULL,
+  `usado` TINYINT(1) NOT NULL,
+  `request_ip` VARCHAR(45) NULL,
+  `Usuario_idUsuario` INT NOT NULL,
+  PRIMARY KEY (`idAtualizar_senha`),
+  INDEX `fk_Atualizar_senha_Usuario_idx` (`Usuario_idUsuario` ASC) VISIBLE,
+  CONSTRAINT `fk_Atualizar_senha_Usuario`
+    FOREIGN KEY (`Usuario_idUsuario`)
+    REFERENCES `new_schema1`.`Usuario` (`idUsuario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Vitrine`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Vitrine` (
+  `idVitrine` INT NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(45) NULL,
+  `descricao` TEXT NULL,
+  `data_criacao` DATETIME NULL,
+  PRIMARY KEY (`idVitrine`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Endereco_usuario`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Endereco_usuario` (
+  `idEndereco` INT NOT NULL AUTO_INCREMENT,
+  `cep` VARCHAR(8) NULL,
+  `logradouro` VARCHAR(45) NULL,
+  `numero` INT NULL,
+  `bairro` VARCHAR(45) NULL,
+  `cidade` VARCHAR(45) NULL,
+  `estado` VARCHAR(45) NULL,
+  `complemento` VARCHAR(100) NULL,
+  `Cadastro_usuario_idCadastro_usuario` INT NOT NULL,
+  `Cadastro_usuario_Usuario_idUsuario` INT NOT NULL,
+  PRIMARY KEY (`idEndereco`, `Cadastro_usuario_idCadastro_usuario`, `Cadastro_usuario_Usuario_idUsuario`),
+  INDEX `fk_Endereco_usuario_Cadastro_usuario1_idx` (`Cadastro_usuario_idCadastro_usuario` ASC, `Cadastro_usuario_Usuario_idUsuario` ASC) VISIBLE,
+  CONSTRAINT `fk_Endereco_usuario_Cadastro_usuario1`
+    FOREIGN KEY (`Cadastro_usuario_idCadastro_usuario` , `Cadastro_usuario_Usuario_idUsuario`)
+    REFERENCES `new_schema1`.`Cadastro_usuario` (`idCadastro_usuario` , `Usuario_idUsuario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Favoritos`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Favoritos` (
+  `idFavoritos` INT NOT NULL,
+  PRIMARY KEY (`idFavoritos`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Carrinho`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Carrinho` (
+  `idCarrinho` INT NOT NULL AUTO_INCREMENT,
+  `Vitrine_idVitrine` INT NOT NULL,
+  `Usuario_idUsuario` INT NOT NULL,
+  `quantidade` INT NOT NULL DEFAULT 1,
+  `preco_unitario` DECIMAL(10,2) NULL,
+  PRIMARY KEY (`idCarrinho`),
+  INDEX `fk_Carrinho_Vitrine1_idx` (`Vitrine_idVitrine` ASC) VISIBLE,
+  INDEX `fk_Carrinho_Usuario1_idx` (`Usuario_idUsuario` ASC) VISIBLE,
+  CONSTRAINT `fk_Carrinho_Vitrine1`
+    FOREIGN KEY (`Vitrine_idVitrine`)
+    REFERENCES `new_schema1`.`Vitrine` (`idVitrine`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Carrinho_Usuario1`
+    FOREIGN KEY (`Usuario_idUsuario`)
+    REFERENCES `new_schema1`.`Usuario` (`idUsuario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Produtos`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Produtos` (
+  `idProdutos` INT NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(100) NOT NULL,
+  `descricao` TEXT NULL,
+  `preco` DECIMAL(10,2) NOT NULL,
+  `quantidade_estoque` VARCHAR(45) NOT NULL,
+  `imagem` VARCHAR(255) NULL,
+  `data_cadastro` DATETIME NULL,
+  `nota` TINYINT NOT NULL,
+  `Carrinho_idCarrinho` INT NOT NULL,
+  `Vitrine_idVitrine` INT NOT NULL,
+  `Administrador_idAdministrador` INT NOT NULL,
+  `Favoritos_idFavoritos` INT NOT NULL,
+  PRIMARY KEY (`idProdutos`, `Carrinho_idCarrinho`, `Vitrine_idVitrine`),
+  INDEX `fk_Produtos_Carrinho1_idx` (`Carrinho_idCarrinho` ASC) VISIBLE,
+  INDEX `fk_Produtos_Vitrine1_idx` (`Vitrine_idVitrine` ASC) VISIBLE,
+  INDEX `fk_Produtos_Administrador1_idx` (`Administrador_idAdministrador` ASC) VISIBLE,
+  INDEX `fk_Produtos_Favoritos1_idx` (`Favoritos_idFavoritos` ASC) VISIBLE,
+  CONSTRAINT `fk_Produtos_Carrinho1`
+    FOREIGN KEY (`Carrinho_idCarrinho`)
+    REFERENCES `new_schema1`.`Carrinho` (`idCarrinho`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Produtos_Vitrine1`
+    FOREIGN KEY (`Vitrine_idVitrine`)
+    REFERENCES `new_schema1`.`Vitrine` (`idVitrine`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Produtos_Administrador1`
+    FOREIGN KEY (`Administrador_idAdministrador`)
+    REFERENCES `new_schema1`.`Administrador` (`idAdministrador`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Produtos_Favoritos1`
+    FOREIGN KEY (`Favoritos_idFavoritos`)
+    REFERENCES `new_schema1`.`Favoritos` (`idFavoritos`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Avaliacao_produto`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Avaliacao_produto` (
+  `idAvaliacao_produto` INT NOT NULL AUTO_INCREMENT,
+  `Avaliacao_produtocol` VARCHAR(45) NULL,
+  `Produtos_idProdutos` INT NOT NULL,
+  `Produtos_Carrinho_idCarrinho` INT NOT NULL,
+  `Produtos_Vitrine_idVitrine` INT NOT NULL,
+  `Usuario_idUsuario` INT NOT NULL,
+  PRIMARY KEY (`idAvaliacao_produto`),
+  INDEX `fk_Avaliacao_produto_Produtos1_idx` (`Produtos_idProdutos` ASC, `Produtos_Carrinho_idCarrinho` ASC, `Produtos_Vitrine_idVitrine` ASC) VISIBLE,
+  INDEX `fk_Avaliacao_produto_Usuario1_idx` (`Usuario_idUsuario` ASC) VISIBLE,
+  CONSTRAINT `fk_Avaliacao_produto_Produtos1`
+    FOREIGN KEY (`Produtos_idProdutos` , `Produtos_Carrinho_idCarrinho` , `Produtos_Vitrine_idVitrine`)
+    REFERENCES `new_schema1`.`Produtos` (`idProdutos` , `Carrinho_idCarrinho` , `Vitrine_idVitrine`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Avaliacao_produto_Usuario1`
+    FOREIGN KEY (`Usuario_idUsuario`)
+    REFERENCES `new_schema1`.`Usuario` (`idUsuario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Pagamento_cartao_credito`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Pagamento_cartao_credito` (
+  `idPagamento_cartao_credito` INT NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(45) NOT NULL,
+  `numero_cartao` INT(32) NOT NULL,
+  `validade` VARCHAR(7) NOT NULL,
+  `cvv` INT(3) NOT NULL,
+  `parcelas` INT NOT NULL,
+  PRIMARY KEY (`idPagamento_cartao_credito`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Forma_pagamento`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Forma_pagamento` (
+  `idForma_pagamento` INT NOT NULL,
+  `pix` VARCHAR(45) NULL,
+  `dinheiro` DOUBLE(10,2) NULL,
+  `Pagamento_cartao_credito_idPagamento_cartao_credito` INT NOT NULL,
+  PRIMARY KEY (`idForma_pagamento`),
+  INDEX `fk_Forma_pagamento_Pagamento_cartao_credito1_idx` (`Pagamento_cartao_credito_idPagamento_cartao_credito` ASC) VISIBLE,
+  CONSTRAINT `fk_Forma_pagamento_Pagamento_cartao_credito1`
+    FOREIGN KEY (`Pagamento_cartao_credito_idPagamento_cartao_credito`)
+    REFERENCES `new_schema1`.`Pagamento_cartao_credito` (`idPagamento_cartao_credito`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Endereco_manual`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Endereco_manual` (
+  `idEndereco_manual` INT NOT NULL AUTO_INCREMENT,
+  `cep` VARCHAR(10) NOT NULL,
+  `logradouro` VARCHAR(100) NOT NULL,
+  `bairro` VARCHAR(45) NOT NULL,
+  `cidade` VARCHAR(2) NOT NULL,
+  `numero` INT NOT NULL,
+  `referencia` VARCHAR(45) NULL,
+  `complemento` VARCHAR(100) NULL,
+  PRIMARY KEY (`idEndereco_manual`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Endereco_entrega`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Endereco_entrega` (
+  `idEndereco_entrega` INT NOT NULL AUTO_INCREMENT,
+  `Endereco_usuario_idEndereco` INT NOT NULL,
+  `Endereco_usuario_Cadastro_usuario_idCadastro_usuario` INT NOT NULL,
+  `Endereco_usuario_Cadastro_usuario_Usuario_idUsuario` INT NOT NULL,
+  `Endereco_manual_idEndereco_manual` INT NOT NULL,
+  PRIMARY KEY (`idEndereco_entrega`),
+  INDEX `fk_Endereco_entrega_Endereco_usuario1_idx` (`Endereco_usuario_idEndereco` ASC, `Endereco_usuario_Cadastro_usuario_idCadastro_usuario` ASC, `Endereco_usuario_Cadastro_usuario_Usuario_idUsuario` ASC) VISIBLE,
+  INDEX `fk_Endereco_entrega_Endereco_manual1_idx` (`Endereco_manual_idEndereco_manual` ASC) VISIBLE,
+  CONSTRAINT `fk_Endereco_entrega_Endereco_usuario1`
+    FOREIGN KEY (`Endereco_usuario_idEndereco` , `Endereco_usuario_Cadastro_usuario_idCadastro_usuario` , `Endereco_usuario_Cadastro_usuario_Usuario_idUsuario`)
+    REFERENCES `new_schema1`.`Endereco_usuario` (`idEndereco` , `Cadastro_usuario_idCadastro_usuario` , `Cadastro_usuario_Usuario_idUsuario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Endereco_entrega_Endereco_manual1`
+    FOREIGN KEY (`Endereco_manual_idEndereco_manual`)
+    REFERENCES `new_schema1`.`Endereco_manual` (`idEndereco_manual`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Pedido`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Pedido` (
+  `idPagamento` INT NOT NULL AUTO_INCREMENT,
+  `valor` DECIMAL(10,2) NOT NULL,
+  `frete` DECIMAL(10,2) NOT NULL,
+  `desconto_cupom` DECIMAL(10,2) NOT NULL,
+  `preco_total` DECIMAL(10,2) NOT NULL,
+  `data_pagamento` DATETIME NULL,
+  `observacao` TEXT NULL,
+  `Forma_pagamento_idForma_pagamento` INT NOT NULL,
+  `Usuario_idUsuario` INT NOT NULL,
+  `Endereco_entrega_idEndereco_entrega` INT NOT NULL,
+  PRIMARY KEY (`idPagamento`, `Forma_pagamento_idForma_pagamento`, `Endereco_entrega_idEndereco_entrega`),
+  INDEX `fk_Pedido_Forma_pagamento1_idx` (`Forma_pagamento_idForma_pagamento` ASC) VISIBLE,
+  INDEX `fk_Pedido_Usuario1_idx` (`Usuario_idUsuario` ASC) VISIBLE,
+  INDEX `fk_Pedido_Endereco_entrega1_idx` (`Endereco_entrega_idEndereco_entrega` ASC) VISIBLE,
+  CONSTRAINT `fk_Pedido_Forma_pagamento1`
+    FOREIGN KEY (`Forma_pagamento_idForma_pagamento`)
+    REFERENCES `new_schema1`.`Forma_pagamento` (`idForma_pagamento`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Pedido_Usuario1`
+    FOREIGN KEY (`Usuario_idUsuario`)
+    REFERENCES `new_schema1`.`Usuario` (`idUsuario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Pedido_Endereco_entrega1`
+    FOREIGN KEY (`Endereco_entrega_idEndereco_entrega`)
+    REFERENCES `new_schema1`.`Endereco_entrega` (`idEndereco_entrega`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Relatorio`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Relatorio` (
+  `idRelatorio` INT NOT NULL,
+  `data_pedido` DATETIME NULL,
+  `status_pedido` ENUM('realizado', 'producao', 'transito', 'entregue', 'cancelado') NOT NULL,
+  `Pedido_idPagamento` INT NOT NULL,
+  `Pedido_Endereco_entrega_idEndereco_entrega` INT NOT NULL,
+  `Pedido_Forma_pagamento_idForma_pagamento` INT NOT NULL,
+  `Administrador_idAdministrador` INT NOT NULL,
+  PRIMARY KEY (`idRelatorio`, `Pedido_idPagamento`, `Pedido_Endereco_entrega_idEndereco_entrega`, `Pedido_Forma_pagamento_idForma_pagamento`),
+  INDEX `fk_Relatorio_Pedido1_idx` (`Pedido_idPagamento` ASC, `Pedido_Endereco_entrega_idEndereco_entrega` ASC, `Pedido_Forma_pagamento_idForma_pagamento` ASC) VISIBLE,
+  INDEX `fk_Relatorio_Administrador1_idx` (`Administrador_idAdministrador` ASC) VISIBLE,
+  CONSTRAINT `fk_Relatorio_Pedido1`
+    FOREIGN KEY (`Pedido_idPagamento` , `Pedido_Forma_pagamento_idForma_pagamento`)
+    REFERENCES `new_schema1`.`Pedido` (`idPagamento` , `Forma_pagamento_idForma_pagamento`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Relatorio_Administrador1`
+    FOREIGN KEY (`Administrador_idAdministrador`)
+    REFERENCES `new_schema1`.`Administrador` (`idAdministrador`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Produtos_has_Pedido`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Produtos_has_Pedido` (
+  `Produtos_idProdutos` INT NOT NULL,
+  `Produtos_Carrinho_idCarrinho` INT NOT NULL,
+  `Produtos_Vitrine_idVitrine` INT NOT NULL,
+  `Pedido_idPagamento` INT NOT NULL,
+  `Pedido_Endereco_entrega_idEndereco_entrega` INT NOT NULL,
+  `Pedido_Forma_pagamento_idForma_pagamento` INT NOT NULL,
+  PRIMARY KEY (`Produtos_idProdutos`, `Produtos_Carrinho_idCarrinho`, `Produtos_Vitrine_idVitrine`, `Pedido_idPagamento`, `Pedido_Endereco_entrega_idEndereco_entrega`, `Pedido_Forma_pagamento_idForma_pagamento`),
+  INDEX `fk_Produtos_has_Pedido_Pedido1_idx` (`Pedido_idPagamento` ASC, `Pedido_Endereco_entrega_idEndereco_entrega` ASC, `Pedido_Forma_pagamento_idForma_pagamento` ASC) VISIBLE,
+  INDEX `fk_Produtos_has_Pedido_Produtos1_idx` (`Produtos_idProdutos` ASC, `Produtos_Carrinho_idCarrinho` ASC, `Produtos_Vitrine_idVitrine` ASC) VISIBLE,
+  CONSTRAINT `fk_Produtos_has_Pedido_Produtos1`
+    FOREIGN KEY (`Produtos_idProdutos` , `Produtos_Carrinho_idCarrinho` , `Produtos_Vitrine_idVitrine`)
+    REFERENCES `new_schema1`.`Produtos` (`idProdutos` , `Carrinho_idCarrinho` , `Vitrine_idVitrine`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Produtos_has_Pedido_Pedido1`
+    FOREIGN KEY (`Pedido_idPagamento` , `Pedido_Forma_pagamento_idForma_pagamento`)
+    REFERENCES `new_schema1`.`Pedido` (`idPagamento` , `Forma_pagamento_idForma_pagamento`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `new_schema1`.`Recomendacoes`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `new_schema1`.`Recomendacoes` (
+  `idRecomendacoes` INT NOT NULL AUTO_INCREMENT,
+  `data_geracao` DATETIME NULL,
+  `ativo` TINYINT NULL,
+  `observacao` TEXT NULL,
+  `Usuario_idUsuario` INT NOT NULL,
+  `Produtos_idProdutos` INT NOT NULL,
+  `Produtos_Carrinho_idCarrinho` INT NOT NULL,
+  `Produtos_Vitrine_idVitrine` INT NOT NULL,
+  `Administrador_idAdministrador` INT NOT NULL,
+  PRIMARY KEY (`idRecomendacoes`),
+  INDEX `fk_Recomendacoes_Usuario1_idx` (`Usuario_idUsuario` ASC) VISIBLE,
+  INDEX `fk_Recomendacoes_Produtos1_idx` (`Produtos_idProdutos` ASC, `Produtos_Carrinho_idCarrinho` ASC, `Produtos_Vitrine_idVitrine` ASC) VISIBLE,
+  INDEX `fk_Recomendacoes_Administrador1_idx` (`Administrador_idAdministrador` ASC) VISIBLE,
+  CONSTRAINT `fk_Recomendacoes_Usuario1`
+    FOREIGN KEY (`Usuario_idUsuario`)
+    REFERENCES `new_schema1`.`Usuario` (`idUsuario`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Recomendacoes_Produtos1`
+    FOREIGN KEY (`Produtos_idProdutos` , `Produtos_Carrinho_idCarrinho` , `Produtos_Vitrine_idVitrine`)
+    REFERENCES `new_schema1`.`Produtos` (`idProdutos` , `Carrinho_idCarrinho` , `Vitrine_idVitrine`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Recomendacoes_Administrador1`
+    FOREIGN KEY (`Administrador_idAdministrador`)
+    REFERENCES `new_schema1`.`Administrador` (`idAdministrador`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
