@@ -255,7 +255,7 @@ class _AddressScreenState extends State<AddressScreen> {
             SliverAppBar(
               pinned: true,
               backgroundColor: Colors.brown.shade700,
-              expandedHeight: 100,
+              expandedHeight: 110,
               automaticallyImplyLeading: false,
               iconTheme: const IconThemeData(color: Colors.white),
               flexibleSpace: FlexibleSpaceBar(
@@ -349,8 +349,8 @@ class _AddressScreenState extends State<AddressScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.brown.shade700,
-        child: const Icon(Icons.add),
+        backgroundColor: const Color.fromARGB(255, 0, 218, 15),
+        child: const Icon(Icons.add, color: Colors.white),
         onPressed: () => _showAddressDialog(context),
       ),
       bottomNavigationBar: BottomNavigationBar(

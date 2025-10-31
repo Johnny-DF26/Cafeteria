@@ -310,7 +310,7 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                                             top: Radius.circular(12)),
                                         child: produto['imagem'] != null &&
                                                 produto['imagem'].isNotEmpty
-                                            ? Image.network(
+                                            ? Image.asset(
                                                 produto['imagem'],
                                                 width: double.infinity,
                                                 height: 200,

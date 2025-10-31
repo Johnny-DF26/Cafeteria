@@ -142,15 +142,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       backgroundImage: (img != '-' && img.isNotEmpty) ? NetworkImage(img) as ImageProvider : null,
                       child: (img == '-' || img.isEmpty) ? Text(name.isNotEmpty ? name[0].toUpperCase() : 'U', style: const TextStyle(fontSize: 28, color: Colors.brown)) : null,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(name, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.brown.shade700)),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 12, width: 12),
                           Text(email != '-' ? email : '-', style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 12, width: 12),
                           // botões removidos conforme solicitado
                         ],
                       ),

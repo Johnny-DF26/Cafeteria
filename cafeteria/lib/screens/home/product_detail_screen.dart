@@ -147,7 +147,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       backgroundColor: const Color.fromARGB(255, 248, 232, 225),
       appBar: AppBar(
         backgroundColor: Colors.brown.shade700,
-        title: Text("Cafeteria Gourmet", style: GoogleFonts.pacifico()),
+        title: Text("Café Gourmet", style: GoogleFonts.pacifico(), textAlign: TextAlign.center),
         actions: [
           IconButton(
             icon: _loadingFav
@@ -168,7 +168,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 children: [
                   Positioned.fill(
                     child: product['imagem'] != null && product['imagem'].toString().isNotEmpty
-                        ? Image.network(product['imagem'], fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: Colors.grey.shade200))
+                        ? Image.asset(product['imagem'], fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: Colors.grey.shade200))
                         : Container(color: Colors.grey.shade200, child: const Icon(Icons.image, size: 80, color: Colors.grey)),
                   ),
                   // badge preço

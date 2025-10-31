@@ -35,41 +35,42 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/cafe1.jpg
-    - assets/images/cafe2.jpg
-    - assets/images/cafe3.jpeg
-    - assets/images/cafe4.jpeg
-    - assets/images/logo.jpg
-    - assets/images/design-de-logotipo-vintage-de-cafe-inspiracao-para-cafeteria_427676-94.jpg
-    - assets/images/pngtree-coffee-logo-design-png-image_6352424.jpg
-    - assets/images/bolo_cenoura_chocolate.jpg
-    - assets/images/bolo_chocolate.jpeg
-    - assets/images/bolo_chocolate2.jpeg
-    - assets/images/brownie_chocolate.jpeg
-    - assets/images/cafe_americano.jpg
-    - assets/images/cafe_ao_leite.jpg
-    - assets/images/cafe_expresso_simples.jpg
-    - assets/images/cafe_expresso.jpg
-    - assets/images/cafe_gelado.jpg
-    - assets/images/cafe_latte.jpg
-    - assets/images/capuccino_tradicional.jpg
-    - assets/images/capuccino.jpeg
-    - assets/images/pao_de_queijo.jpeg
-    - assets/images/cha_preto.jpg
-    - assets/images/cha_verde.jpg
-    - assets/images/chocolate_quente.jpg
-    - assets/images/cookie_chocolate.jpeg
-    - assets/images/croissant_chocolate.jpeg
-    - assets/images/iced_latte.jpg
-    - assets/images/muffin_blueberry.jpeg
-    - assets/images/latte_macchiato.jpeg
-    - assets/images/mocha.jpeg
-    - assets/images/muffin_chocolate.jpeg
-    - assets/images/pingado.jpeg
-    - assets/images/qrcode_pix.png
-    - assets/images/sanduiche_natural.jpeg
-    - assets/images/smoothie_morango.jpeg
-    - assets/images/suco_de_laranja.jpeg
+    - assets/images/
+    #- assets/images/cafe1.jpg
+    #- assets/images/cafe2.jpg
+    #- assets/images/cafe3.jpeg
+    #- assets/images/cafe4.jpeg
+    #- assets/images/logo.jpg
+    #- assets/images/design-de-logotipo-vintage-de-cafe-inspiracao-para-cafeteria_427676-94.jpg
+    #- assets/images/pngtree-coffee-logo-design-png-image_6352424.jpg
+    #- assets/images/bolo_cenoura_chocolate.jpg
+    #- assets/images/bolo_chocolate.jpeg
+    #- assets/images/bolo_chocolate2.jpeg
+    #- assets/images/brownie_chocolate.jpeg
+    #- assets/images/cafe_americano.jpg
+    #- assets/images/cafe_ao_leite.jpg
+    #- assets/images/cafe_expresso_simples.jpg
+    #- assets/images/cafe_expresso.jpg
+    #- assets/images/cafe_gelado.jpg
+    #- assets/images/cafe_latte.jpg
+    #- assets/images/capuccino_tradicional.jpg
+    #- assets/images/capuccino.jpeg
+    #- assets/images/pao_de_queijo.jpeg
+    #- assets/images/cha_preto.jpg
+    #- assets/images/cha_verde.jpg
+    #- assets/images/chocolate_quente.jpg
+    #- assets/images/cookie_chocolate.jpeg
+    #- assets/images/croissant_chocolate.jpeg
+    #- assets/images/iced_latte.jpg
+    #- assets/images/muffin_blueberry.jpeg
+    #- assets/images/latte_macchiato.jpeg
+    #- assets/images/mocha.jpeg
+    #- assets/images/muffin_chocolate.jpeg
+    #- assets/images/pingado.jpeg
+    #- assets/images/qrcode_pix.png
+    #- assets/images/sanduiche_natural.jpeg
+    #- assets/images/smoothie_morango.jpeg
+    #- assets/images/suco_de_laranja.jpeg
     
 
 

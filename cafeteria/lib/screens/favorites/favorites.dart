@@ -207,7 +207,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                                         ClipRRect(
                                           borderRadius: BorderRadius.circular(12),
                                           child: item['imagem'] != null && item['imagem'].isNotEmpty
-                                              ? Image.network(
+                                              ? Image.asset(
                                                   item['imagem'],
                                                   width: double.infinity,
                                                   height: 180,
@@ -230,7 +230,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                                         ClipRRect(
                                           borderRadius: BorderRadius.circular(12),
                                           child: item['imagem'] != null && item['imagem'].isNotEmpty
-                                              ? Image.network(
+                                              ? Image.asset(
                                                   item['imagem'],
                                                   width: screenWidth * 0.35,
                                                   height: 180,

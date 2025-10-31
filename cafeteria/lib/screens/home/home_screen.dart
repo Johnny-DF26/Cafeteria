@@ -7,6 +7,7 @@ import '../../core/routes.dart';
 import '../global/user_provider.dart';
 import 'package:cafeteria/screens/home/product_detail_screen.dart';
 
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -32,31 +33,31 @@ class _HomeScreenState extends State<HomeScreen> {
   int _promoIndex = 0;
 
   @override
-void initState() {
-  super.initState();
-  _promoPageController = PageController(viewportFraction: 0.86);
-  fetchProdutos();
-  _loadData();
-  // dá tempo para o Provider nascer
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-    final userData = userProvider.userData;
-    final userId = userData?['id'];
-    
-    if (userId != null) {
-      fetchUserFavorites(userId);
+    void initState() {
+      super.initState();
+      _promoPageController = PageController(viewportFraction: 0.86);
+      fetchProdutos();
+      _loadData();
+      // dá tempo para o Provider nascer
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        final userData = userProvider.userData;
+        final userId = userData?['id'];
+        
+        if (userId != null) {
+          fetchUserFavorites(userId);
+        }
+      });
     }
-  });
-}
 
   @override
-  void dispose() {
-    _promoPageController.dispose();
-    _categoryController.dispose();
-    _promoController.dispose();
-    _recommendController.dispose();
-    super.dispose();
-  }
+    void dispose() {
+      _promoPageController.dispose();
+      _categoryController.dispose();
+      _promoController.dispose();
+      _recommendController.dispose();
+      super.dispose();
+    }
 
 Future<void> _loadData() async {
     try {
@@ -238,7 +239,7 @@ Future<void> _loadData() async {
                   const SizedBox(height: 1),
                   _buildPromoCarousel(title: "Promoções", items: promoItems, userId: userId, screenWidth: screenWidth),
                   const SizedBox(height: 1),
-                  _buildHorizontalScrollableSection(title: "Todos", controller: _recommendController, items: filteredItems, userId: userId),
+                  _buildHorizontalScrollableSection(title: "Todos", controller: _recommendController, items: filteredItems, userId: userId,),
                 ],
               ),
             ),
@@ -288,16 +289,16 @@ Future<void> _loadData() async {
     );
   }
 
-  final cardWidth = (screenWidth * 0.78).clamp(260.0, 380.0);
-  final cardHeight = 200.0;
+  final cardWidth = (screenWidth * 1.8).clamp(300.0, 310.0);
+  final cardHeight = 270.0;
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-      const SizedBox(height: 8),
+      const SizedBox(height: 2),
       SizedBox(
-        height: cardHeight + 100, // espaço para estrelas + botões
+        height: cardHeight + 30, // espaço para estrelas + botões
         child: PageView.builder(
           controller: _promoPageController,
           itemCount: items.length,
@@ -312,26 +313,26 @@ Future<void> _loadData() async {
             final valorFormatado = valorNum.toStringAsFixed(2).replaceAll(".", ",");
 
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 10),
               child: Center(
                 child: SizedBox(
                   width: cardWidth,
                   child: Card(
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    elevation: 4,
+                    elevation: 8,
                     clipBehavior: Clip.hardEdge,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Imagem
                         Expanded(
-                          flex: 50,
+                          flex: 40,
                           child: Stack(
                             children: [
                               ClipRRect(
                                 borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
                                 child: imageUrl.isNotEmpty
-                                    ? Image.network(imageUrl, width: double.infinity, fit: BoxFit.cover,
+                                    ? Image.asset(imageUrl, width: double.infinity, fit: BoxFit.cover,
                                         errorBuilder: (_, __, ___) => Container(color: Colors.grey.shade200))
                                     : Container(color: Colors.grey.shade200),
                               ),
@@ -365,15 +366,15 @@ Future<void> _loadData() async {
 
                         // Conteúdo
                         Expanded(
-                          flex: 45,
+                          flex: 50,
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                            padding: const EdgeInsets.fromLTRB(10, 2, 10, 10),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 1),
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -381,21 +382,26 @@ Future<void> _loadData() async {
                                       child: Text(desc, maxLines: 2, overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(color: Colors.grey, fontSize: 12)),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text("R\$ $valorFormatado",
-                                        style: TextStyle(color: Colors.brown.shade700, fontWeight: FontWeight.bold)),
                                   ],
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 1),
 
                                 // Rating
                                 Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: List.generate(5, (i) {
                                     return Icon(i < rating ? Icons.star : Icons.star_border,
                                         color: Colors.amber, size: 14);
                                   }),
                                 ),
-
+                                Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    const SizedBox(width: 5),
+                                    Text("R\$ $valorFormatado",
+                                        style: TextStyle(color: Colors.brown.shade700, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
                                 const SizedBox(height: 8),
                                 Row(
                                 children: [
@@ -418,14 +424,14 @@ Future<void> _loadData() async {
                                           ),
                                         );
                                       },
-                                      icon: const Icon(Icons.visibility_rounded, size: 20),
+                                      icon: const Icon(Icons.visibility_rounded, size: 16),
                                       label: const Text(
                                         'Ver Detalhes',
-                                        style: TextStyle(fontWeight: FontWeight.w600),
+                                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 5),
 
                                   // Botão Adicionar ao Carrinho
                                   Expanded(
@@ -490,13 +496,9 @@ Future<void> _loadData() async {
                                           );
                                         }
                                       },
-                                      icon: const Icon(Icons.shopping_cart_rounded, size: 20, color: Colors.white),
-                                      label: const Text(
-                                        'Carrinho',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                        ),
+                                      icon: const Icon(Icons.shopping_cart_rounded, size: 16, color: Colors.white),
+                                      label: const Text('Carrinho', 
+                                        style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white, fontSize: 14,),
                                       ),
                                     ),
                                   ),
@@ -515,7 +517,7 @@ Future<void> _loadData() async {
           },
         ),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: 1),
       Center(
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -525,7 +527,7 @@ Future<void> _loadData() async {
               duration: const Duration(milliseconds: 240),
               margin: const EdgeInsets.symmetric(horizontal: 4),
               width: _promoIndex == i ? 18 : 8,
-              height: 10,
+              height: 5,
               decoration: BoxDecoration(
                 color: _promoIndex == i ? Colors.brown.shade700 : Colors.grey.shade400,
                 borderRadius: BorderRadius.circular(6),
@@ -613,7 +615,7 @@ Future<void> _loadData() async {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
+        const SizedBox(height: 2),
         if (items.isEmpty)
           const Padding(
             padding: EdgeInsets.all(16),
@@ -621,14 +623,14 @@ Future<void> _loadData() async {
           )
         else
           LayoutBuilder(builder: (context, constraints) {
-            final cardWidth = (constraints.maxWidth / 1.8).clamp(200.0, 300.0);
+            final cardWidth = (constraints.maxWidth / 1.8).clamp(300.0, 310.0);
             return SizedBox(
-              height: 280,
+              height: 295,
               child: ListView.builder(
                 controller: controller,
                 scrollDirection: Axis.horizontal,
                 itemCount: items.length,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 5),
                 itemBuilder: (context, index) {
                   final item = items[index];
                   return SizedBox(width: cardWidth as double, child: _buildProductCard(item, userId));
@@ -647,13 +649,13 @@ Future<void> _loadData() async {
   final valorFormatado = valorNum.toStringAsFixed(2).replaceAll(".", ",");
 
   return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+    margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
     child: Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 4,
       shadowColor: Colors.brown.shade200,
       child: Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.all(8.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -662,14 +664,10 @@ Future<void> _loadData() async {
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   child: imageUrl.isNotEmpty
-                      ? Image.network(
-                          imageUrl,
-                          height: 120,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        )
+                      ? Image.asset(imageUrl, height: 115, width: double.infinity, fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(color: Colors.grey.shade200))
                       : Container(
-                          height: 180,
+                          height: 200,
                           color: Colors.grey[300],
                           child: const Icon(Icons.image, size: 50, color: Colors.grey),
                         ),
@@ -727,24 +725,33 @@ Future<void> _loadData() async {
                           return Icon(
                             index < rating ? Icons.star : Icons.star_border,
                             color: Colors.amber,
-                            size: 10,
+                            size: 12
                           );
                         }),
                       ),
-                      Text(
-                        "R\$ $valorFormatado",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.brown.shade700,
-                        ),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            "R\$ $valorFormatado",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            color: Colors.brown.shade700,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 50),
+            const SizedBox(height: 5),
 
             // ======= BOTÕES =======
             Row(
@@ -767,21 +774,21 @@ Future<void> _loadData() async {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.visibility_rounded, size: 15),
+                    icon: const Icon(Icons.visibility_rounded, size: 16),
                     label: const Text(
-                      'Ver Detalhes', 
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                      'Detalhes', 
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 3),
 
                 // Botão "Comprar"
                 Expanded(
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.brown.shade700,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 5),
                       elevation: 3,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -835,10 +842,9 @@ Future<void> _loadData() async {
                         );
                       }
                     },
-                    icon: const Icon(Icons.shopping_cart_rounded, size: 15, color: Colors.white),
+                    icon: const Icon(Icons.shopping_cart_rounded, size: 16, color: Colors.white),
                     label: const Text('Carrinho',
-                      style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white, fontSize: 14),
                     ),
                   ),
                 ),

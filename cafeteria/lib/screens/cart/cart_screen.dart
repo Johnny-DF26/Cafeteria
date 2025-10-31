@@ -201,7 +201,7 @@ class _CartScreenState extends State<CartScreen> {
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(12),
                                       child: item['image'] != null && item['image'].isNotEmpty
-                                          ? Image.network(item['image'], width: double.infinity, height: 180, fit: BoxFit.cover)
+                                          ? Image.asset(item['image'], width: double.infinity, height: 180, fit: BoxFit.cover)
                                           : Container(
                                               width: double.infinity,
                                               height: 180,
@@ -219,7 +219,7 @@ class _CartScreenState extends State<CartScreen> {
                                     ClipRRect(
                                       borderRadius: BorderRadius.circular(12),
                                       child: item['image'] != null && item['image'].isNotEmpty
-                                          ? Image.network(item['image'], width: screenWidth * 0.35, height: 180, fit: BoxFit.cover)
+                                          ? Image.asset(item['image'], width: screenWidth * 0.35, height: 180, fit: BoxFit.cover)
                                           : Container(
                                               width: screenWidth * 0.35,
                                               height: 180,
