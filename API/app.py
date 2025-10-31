@@ -206,7 +206,7 @@ def update_endereco(idEndereco):
     data = request.json
 
     conn = get_connection()
-    cur = conn.cursor()
+    cursor = conn.cursor()
 
     query = """
         UPDATE endereco
@@ -227,10 +227,10 @@ def update_endereco(idEndereco):
         idEndereco
     )
 
-    cur.execute(query, values)
+    cursor.execute(query, values)
     conn.commit()
 
-    cur.close()
+    cursor.close()
     conn.close()
 
     return jsonify({"message": "Endereço atualizado com sucesso!"}), 200
@@ -286,9 +286,9 @@ def get_usuario(id):
 def update_usuario(id):
     data = request.json
     conn = get_connection()
-    cur = conn.cursor()
+    cursor = conn.cursor()
 
-    cur.execute("""
+    cursor.execute("""
         UPDATE usuario 
         SET nome_social=%s, nome_completo=%s, telefone=%s, data_nascimento=%s
         WHERE idUsuario=%s
@@ -297,7 +297,7 @@ def update_usuario(id):
     
     # commit na conexão correta
     conn.commit()
-    cur.close()
+    cursor.close()
     conn.close()
     return jsonify({'message': 'Usuário atualizado com sucesso!'})
 
