@@ -82,7 +82,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    print('Entrou aqui!');
+    
     return Scaffold(
       appBar: AppBar(title: const Text('Criar Conta')),
       body: Center(

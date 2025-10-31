@@ -15,6 +15,7 @@ class AddressScreen extends StatefulWidget {
 
 class _AddressScreenState extends State<AddressScreen> {
   bool loading = false;
+  bool saving = false;
 
   @override
   void initState() {
@@ -22,270 +23,336 @@ class _AddressScreenState extends State<AddressScreen> {
     fetchAddresses();
   }
 
-  // Busca endereços do usuário via API e atualiza o Provider
   Future<void> fetchAddresses() async {
+    if (!mounted) return;
     setState(() => loading = true);
+
     final userData = Provider.of<UserProvider>(context, listen: false).userData;
-    //print(userData);
     if (userData == null) {
-      setState(() => loading = false);
+      if (mounted) setState(() => loading = false);
       return;
     }
 
     final url = Uri.parse('http://192.168.0.167:5000/get_endereco/${userData['id']}');
-
     try {
-      final response = await http.get(url);
+      final response = await http.get(url).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        Provider.of<UserProvider>(context, listen: false).addresses =
-            List<Map<String, dynamic>>.from(data);
+        if (mounted) {
+          Provider.of<UserProvider>(context, listen: false).addresses =
+              List<Map<String, dynamic>>.from(data);
+        }
       } else {
-        print('Erro ao buscar endereços: ${response.statusCode}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao buscar endereços: ${response.statusCode}')));
+        }
       }
     } catch (e) {
-      print('Erro ao conectar: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro de conexão: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
-    setState(() => loading = false);
   }
 
-  // Adiciona ou atualiza endereço via API
   Future<void> saveAddress(Map<String, dynamic> address, {int? idEndereco}) async {
+    if (!mounted) return;
+    setState(() => saving = true);
+
     final userData = Provider.of<UserProvider>(context, listen: false).userData;
-    //print(userData);
-    if (userData == null) return;
+    if (userData == null) {
+      setState(() => saving = false);
+      return;
+    }
 
     final url = idEndereco == null
         ? Uri.parse('http://192.168.0.167:5000/add_endereco')
         : Uri.parse('http://192.168.0.167:5000/update_endereco/$idEndereco');
 
     try {
+      final body = jsonEncode({
+        ...address,
+        'Usuario_idUsuario': userData['id'],
+      });
+
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          ...address,
-          'Usuario_idUsuario': userData['id'],
-        }),
-      );
+        body: body,
+      ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        // Atualiza a lista no Provider após salvar no banco
-        fetchAddresses();
+        await fetchAddresses();
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Endereço salvo com sucesso')));
       } else {
-        print('Erro ao salvar endereço: ${response.statusCode}');
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao salvar: ${response.statusCode}')));
       }
     } catch (e) {
-      print('Erro ao conectar: $e');
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao conectar: $e')));
+    } finally {
+      if (mounted) setState(() => saving = false);
     }
   }
 
-  // Deleta endereço via API
   Future<void> deleteAddress(int idEndereco) async {
     final url = Uri.parse('http://192.168.0.167:5000/delete_endereco/$idEndereco');
     try {
-      final response = await http.delete(url);
+      final response = await http.delete(url).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
-        fetchAddresses();
+        await fetchAddresses();
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Endereço removido')));
       } else {
-        print('Erro ao deletar endereço: ${response.statusCode}');
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao deletar: ${response.statusCode}')));
       }
     } catch (e) {
-      print('Erro ao conectar: $e');
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao conectar: $e')));
     }
   }
 
-  // Dialog para adicionar/editar endereço (mantive por compatibilidade)
   void _showAddressDialog(BuildContext context, {Map<String, dynamic>? addr}) {
-  final _formKey = GlobalKey<FormState>();
+    final _formKey = GlobalKey<FormState>();
 
-  final logradouroController = TextEditingController(text: addr?['logradouro'] ?? '');
-  final numeroController = TextEditingController(text: addr?['numero'] ?? '');
-  final bairroController = TextEditingController(text: addr?['bairro'] ?? '');
-  final cidadeController = TextEditingController(text: addr?['cidade'] ?? '');
-  final estadoController = TextEditingController(text: addr?['estado'] ?? '');
-  final cepController = TextEditingController(text: addr?['cep'] ?? '');
-  final complementoController = TextEditingController(text: addr?['complemento'] ?? '');
-  final referenciaController = TextEditingController(text: addr?['referencia'] ?? '');
+    final logradouroController = TextEditingController(text: addr?['logradouro'] ?? '');
+    final numeroController = TextEditingController(text: addr?['numero']?.toString() ?? '');
+    final bairroController = TextEditingController(text: addr?['bairro'] ?? '');
+    final cidadeController = TextEditingController(text: addr?['cidade'] ?? '');
+    final estadoController = TextEditingController(text: addr?['estado'] ?? '');
+    final cepController = TextEditingController(text: addr?['cep'] ?? '');
+    final complementoController = TextEditingController(text: addr?['complemento'] ?? '');
+    final referenciaController = TextEditingController(text: addr?['referencia'] ?? '');
 
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(addr == null ? 'Adicionar Endereço' : 'Editar Endereço'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: logradouroController,
-                decoration: const InputDecoration(labelText: 'Logradouro'),
-                validator: (value) => (value == null || value.isEmpty) ? 'Informe o logradouro' : null,
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(builder: (context, setStateDialog) {
+        return AlertDialog(
+          title: Text(addr == null ? 'Adicionar Endereço' : 'Editar Endereço'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: logradouroController,
+                    decoration: const InputDecoration(labelText: 'Logradouro'),
+                    validator: (value) => (value == null || value.isEmpty) ? 'Informe o logradouro' : null,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: numeroController,
+                    decoration: const InputDecoration(labelText: 'Número'),
+                    validator: (value) => (value == null || value.isEmpty) ? 'Informe o número' : null,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: bairroController,
+                    decoration: const InputDecoration(labelText: 'Bairro'),
+                    validator: (value) => (value == null || value.isEmpty) ? 'Informe o bairro' : null,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: cidadeController,
+                    decoration: const InputDecoration(labelText: 'Cidade'),
+                    validator: (value) => (value == null || value.isEmpty) ? 'Informe a cidade' : null,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: estadoController,
+                    decoration: const InputDecoration(labelText: 'Estado'),
+                    validator: (value) => (value == null || value.isEmpty) ? 'Informe o estado' : null,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: cepController,
+                    decoration: const InputDecoration(labelText: 'CEP'),
+                    validator: (value) => (value == null || value.isEmpty) ? 'Informe o CEP' : null,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: complementoController,
+                    decoration: const InputDecoration(labelText: 'Complemento (opcional)'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: referenciaController,
+                    decoration: const InputDecoration(labelText: 'Referência (opcional)'),
+                  ),
+                ],
               ),
-              TextFormField(
-                controller: numeroController,
-                decoration: const InputDecoration(labelText: 'Número'),
-                validator: (value) => (value == null || value.isEmpty) ? 'Informe o número' : null,
-              ),
-              TextFormField(
-                controller: bairroController,
-                decoration: const InputDecoration(labelText: 'Bairro'),
-                validator: (value) => (value == null || value.isEmpty) ? 'Informe o bairro' : null,
-              ),
-              TextFormField(
-                controller: cidadeController,
-                decoration: const InputDecoration(labelText: 'Cidade'),
-                validator: (value) => (value == null || value.isEmpty) ? 'Informe a cidade' : null,
-              ),
-              TextFormField(
-                controller: estadoController,
-                decoration: const InputDecoration(labelText: 'Estado'),
-                validator: (value) => (value == null || value.isEmpty) ? 'Informe o estado' : null,
-              ),
-              TextFormField(
-                controller: cepController,
-                decoration: const InputDecoration(labelText: 'CEP'),
-                validator: (value) => (value == null || value.isEmpty) ? 'Informe o CEP' : null,
-              ),
-              TextFormField(
-                controller: complementoController,
-                decoration: const InputDecoration(labelText: 'Complemento (opcional)'),
-              ),
-              TextFormField(
-                controller: referenciaController,
-                decoration: const InputDecoration(labelText: 'Referência (opcional)'),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.brown.shade700),
-          onPressed: () {
-            if (_formKey.currentState!.validate()) { // só salva se todos os campos obrigatórios estiverem preenchidos
-              final newAddress = {
-                'logradouro': logradouroController.text,
-                'numero': numeroController.text,
-                'bairro': bairroController.text,
-                'cidade': cidadeController.text,
-                'estado': estadoController.text,
-                'cep': cepController.text,
-                'complemento': complementoController.text,
-                'referencia': referenciaController.text,
-              };
-              saveAddress(newAddress, idEndereco: addr?['idEndereco_usuario']);
+          actions: [
+            TextButton(onPressed: () {
               Navigator.pop(context);
-            }
-          },
-          child: const Text('Salvar',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400),
-          ),
-        ),
-      ],
-    ),
-  );
-}
+            }, child: const Text('Cancelar')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.brown.shade700),
+              onPressed: saving
+                  ? null
+                  : () {
+                      if (_formKey.currentState!.validate()) {
+                        final newAddress = {
+                          'logradouro': logradouroController.text.trim(),
+                          'numero': numeroController.text.trim(),
+                          'bairro': bairroController.text.trim(),
+                          'cidade': cidadeController.text.trim(),
+                          'estado': estadoController.text.trim(),
+                          'cep': cepController.text.trim(),
+                          'complemento': complementoController.text.trim(),
+                          'referencia': referenciaController.text.trim(),
+                        };
+                        saveAddress(newAddress, idEndereco: addr?['idEndereco_usuario']);
+                        Navigator.pop(context);
+                      }
+                    },
+              child: saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('Salvar', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      }),
+    ).then((_) {
+      // libera controllers (eles são locais, o GC vai liberar, mas limpamos)
+      logradouroController.dispose();
+      numeroController.dispose();
+      bairroController.dispose();
+      cidadeController.dispose();
+      estadoController.dispose();
+      cepController.dispose();
+      complementoController.dispose();
+      referenciaController.dispose();
+    });
+  }
 
+  Future<void> _confirmDelete(BuildContext context, int idEndereco) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Confirmar remoção'),
+        content: const Text('Deseja realmente remover este endereço?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancelar')),
+          ElevatedButton(onPressed: () => Navigator.pop(c, true), style: ElevatedButton.styleFrom(backgroundColor: Colors.red), child: const Text('Remover')),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await deleteAddress(idEndereco);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final addresses = Provider.of<UserProvider>(context).addresses;
-    final userData = Provider.of<UserProvider>(context, listen: false).userData;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          // Barra superior igual à ProfileScreen
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: Colors.brown.shade700,
-            expandedHeight: 100,
-            automaticallyImplyLeading: false,
-            iconTheme: const IconThemeData(color: Colors.white),
-            flexibleSpace: FlexibleSpaceBar(
-              centerTitle: true,
-              title: Text(
-                'Café Gourmet',
-                style: GoogleFonts.pacifico(
-                  fontSize: 30,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w400,
+      body: RefreshIndicator(
+        onRefresh: fetchAddresses,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              backgroundColor: Colors.brown.shade700,
+              expandedHeight: 100,
+              automaticallyImplyLeading: false,
+              iconTheme: const IconThemeData(color: Colors.white),
+              flexibleSpace: FlexibleSpaceBar(
+                centerTitle: true,
+                title: Text(
+                  'Café Gourmet',
+                  style: GoogleFonts.pacifico(
+                    fontSize: 30,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(
-                'Endereços',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: const Color.fromARGB(255, 46, 33, 27),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  'Endereços',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: const Color.fromARGB(255, 46, 33, 27),
+                  ),
                 ),
               ),
             ),
-          ),
-          // Conteúdo
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: loading
-                  ? const Center(
-                      child: Padding(
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: loading
+                    ? const Padding(
                         padding: EdgeInsets.only(top: 32),
-                        child: CircularProgressIndicator(),
-                      ),
-                    )
-                  : addresses.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.only(top: 32),
-                          child: Center(child: Text('Nenhum endereço cadastrado')),
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: addresses.length,
-                          itemBuilder: (context, index) {
-                            final addr = addresses[index];
-                            return Card(
-                              margin: const EdgeInsets.all(8),
-                              child: ListTile(
-                                title: Text('${addr['logradouro']}, ${addr['numero']}'),
-                                subtitle: Text('${addr['bairro']}, ${addr['cidade']} - ${addr['estado']}'),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () => _showAddressDialog(context, addr: addr),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () => deleteAddress(addr['idEndereco_usuario']),
-                                    ),
-                                  ],
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    : addresses.isEmpty
+                        ? const Padding(
+                            padding: EdgeInsets.only(top: 32),
+                            child: Center(child: Text('Nenhum endereço cadastrado')),
+                          )
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: addresses.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 8),
+                            itemBuilder: (context, index) {
+                              final addr = addresses[index];
+                              final title = '${addr['logradouro'] ?? ''}, ${addr['numero'] ?? ''}';
+                              final subtitle = '${addr['bairro'] ?? ''}, ${addr['cidade'] ?? ''} - ${addr['estado'] ?? ''}';
+                              return Dismissible(
+                                key: Key('${addr['idEndereco_usuario']}_${index}'),
+                                direction: DismissDirection.endToStart,
+                                confirmDismiss: (_) async {
+                                  await _confirmDelete(context, addr['idEndereco_usuario']);
+                                  // Não remover automaticamente; a função delete atualiza a lista
+                                  return false;
+                                },
+                                background: Container(
+                                  color: Colors.red,
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.only(right: 20),
+                                  child: const Icon(Icons.delete, color: Colors.white),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
+                                child: Card(
+                                  margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
+                                  child: ListTile(
+                                    title: Text(title),
+                                    subtitle: Text(subtitle),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit, color: Colors.blue),
+                                          onPressed: () => _showAddressDialog(context, addr: addr),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.delete, color: Colors.red),
+                                          onPressed: () => _confirmDelete(context, addr['idEndereco_usuario']),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+              ),
             ),
-          ),
-        ],
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+          ],
+        ),
       ),
-
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color.fromARGB(255, 36, 211, 0),
+        backgroundColor: Colors.brown.shade700,
         child: const Icon(Icons.add),
         onPressed: () => _showAddressDialog(context),
       ),
-
-      // Bottom Navigation idêntico ao ProfileScreen
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.brown.shade700,
         unselectedItemColor: Colors.grey,

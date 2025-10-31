@@ -15,7 +15,9 @@ class Routes {
   static const userManagement = '/userManagement';
   static const global = '/global';
   static const deleteUser = '/deleteUser';
-  static const products = '/products';
+  static const String products = '/products';
+  static const String product = '/product';
+  
 
 
 

@@ -14,10 +14,9 @@ CORS(app)
 # ------------------------
 # Cadastro de Usuário (próprio usuário)
 # ------------------------
-@app.route('/cadastro_usuario/', methods=['POST'])
+@app.route('/cadastro_usuario', methods=['POST'])
 def criar_usuario():
     data = request.get_json()
-    print('Entrou aqui ${data}')
     # Pegando os campos enviados pelo Flutter
     #nome_social = data.get('nome_social')
     nome_completo = data.get('nome')
@@ -43,7 +42,7 @@ def criar_usuario():
             """INSERT INTO usuario
             (nome_social, nome_completo, email, senha, cpf, telefone, data_nascimento, data_cadastro, data_ultimo_acesso, ativo, Administrador_idAdministrador)
             VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW(), %s, %s)""",
-            (None, nome_completo, email, senha, cpf, telefone, data_nascimento, 1, 999)
+            (None, nome_completo, email, senha, cpf, telefone, data_nascimento, 1, None)
         )
 
 
@@ -268,6 +267,7 @@ def get_usuario(id):
 
     cur.execute("SELECT * FROM usuario WHERE idUsuario = %s", (id,))
     user = cur.fetchone()
+    
     cur.close()
     conn.close()
     if not user:
@@ -295,7 +295,8 @@ def update_usuario(id):
     """, (data['nome_social'], data['nome_completo'],
           data['telefone'], data['data_nascimento'], id))
     
-    get_connection.commit()
+    # commit na conexão correta
+    conn.commit()
     cur.close()
     conn.close()
     return jsonify({'message': 'Usuário atualizado com sucesso!'})
@@ -957,8 +958,6 @@ def remove_favorito(fav_id):
     finally:
         cursor.close()
         conn.close()
-        conn.close()
-
 
 
 #======================================================================================================================================================================================
@@ -1077,10 +1076,12 @@ def update_carrinho():
 #--------------------------------
 @app.route('/remove_unidade_carrinho/<int:cart_prod_id>', methods=['DELETE'])
 def remove_carrinho(cart_prod_id):
-    cur = get_connection().cursor()
+    conn = get_connection()
+    cur = conn.cursor()
     cur.execute("DELETE FROM carrinho_Produto WHERE idCarrinho_Produtos = %s", (cart_prod_id,))
-    get_connection().commit()
+    conn.commit()
     cur.close()
+    conn.close()
     return jsonify({"status": "sucesso"})
 
 #-------------------------------------
@@ -1356,5 +1357,3 @@ def atualizar_status(id_relatorio):
 # ------------------------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
-    app.run(host='192.168.0.167', port=5000, debug=True)
-    app.run(host='127.0.0.1', port=5000, debug=True)
