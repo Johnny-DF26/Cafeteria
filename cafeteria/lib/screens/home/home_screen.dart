@@ -223,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Align(
                         alignment: Alignment.bottomLeft,
                         child: Text(
-                          "Olá ${capitalize(userData?['nome'])} 👋",
+                          "Olá, ${capitalize(userData?['nome'])} 👋",
                           style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),

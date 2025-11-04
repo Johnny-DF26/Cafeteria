@@ -88,7 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // debug rápido quando não há dados (apenas em debug)
     if (kDebugMode && (userData == null || userData.isEmpty)) {
       // ignore: avoid_print
-      //print('ProfileScreen: userData vazio => $userData');
+      print('ProfileScreen: userData vazio => $userData');
     }
 
     final name = _pick(userData, ['nome_completo', 'nome_social', 'nome']);
