@@ -1248,7 +1248,7 @@ def criar_pedido():
     print(endereco)
     # cria o pedido
     cur.execute("""
-        INSERT INTO Relatorio_Pedido
+        INSERT INTO relatorio_pedido
         (Usuario_idUsuario, endereco, valor_total, valor_frete, valor_desconto, cupom_codigo, status, observacao, tipo_pagamento)
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """, (usuario_id, endereco, valor_total, valor_frete, valor_desconto, cupom_codigo, status, observacao, pagamento))
@@ -1257,7 +1257,7 @@ def criar_pedido():
     # agora salvamos cada item do pedido
     for item in data["items"]:
         cur.execute("""
-            INSERT INTO Relatorio_Pedido_Produto
+            INSERT INTO relatorio_pedido_produto
             (Relatorio_Pedido_id, Produto_id, quantidade, preco_unitario)
             VALUES (%s,%s,%s,%s)
         """, (pedido_id, item["id"], item["quantity"], item["price"]))
@@ -1279,7 +1279,7 @@ def listar_pedidos_usuario(usuario_id):
 
     # pega pedidos
     cur.execute("""
-        SELECT * FROM Relatorio_Pedido
+        SELECT * FROM relatorio_pedido
         WHERE Usuario_idUsuario = %s
        
     """, (usuario_id,))
@@ -1289,7 +1289,7 @@ def listar_pedidos_usuario(usuario_id):
     for pedido in pedidos:
         cur.execute("""
             SELECT p.nome, rp.quantidade, rp.preco_unitario
-            FROM Relatorio_Pedido_Produto rp
+            FROM relatorio_pedido_produto rp
             JOIN produtos p ON p.idProdutos = rp.Produto_id
             WHERE rp.Relatorio_Pedido_id = %s
         """, (pedido["idRelatorio_Pedido"],))
