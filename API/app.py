@@ -1065,7 +1065,7 @@ def update_carrinho():
     cur = conn.cursor()           # Cursor dessa conexão
 
     cur.execute("""
-        UPDATE carrinho_Produto
+        UPDATE carrinho_produto
         SET quantidade = %s, data_criacao=NOW()
         WHERE idCarrinho_Produtos = %s
     """, (data['quantidade'], data['idCarrinho_Produtos']))
@@ -1082,7 +1082,7 @@ def update_carrinho():
 def remove_carrinho(cart_prod_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM carrinho_Produto WHERE idCarrinho_Produtos = %s", (cart_prod_id,))
+    cur.execute("DELETE FROM carrinho_produto WHERE idCarrinho_Produtos = %s", (cart_prod_id,))
     conn.commit()
     cur.close()
     conn.close()
