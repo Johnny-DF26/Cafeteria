@@ -54,7 +54,7 @@ Configuração rápida — frontend (Flutter)
    - Linux/Desktop: flutter run -d linux
 
 Observações importantes
-- O frontend usa um IP fixo (ex.: `http://192.168.0.167:5000`) em vários arquivos — ajuste para o IP da máquina que roda a API ou use um nome DNS local. Verifique [cafeteria/lib/services/auth_service.dart](cafeteria/lib/services/auth_service.dart) e referências a `$baseUrl`.
+- O frontend usa um IP fixo em vários arquivos — ajuste para o IP da máquina que roda a API ou use um nome DNS local. Verifique [cafeteria/lib/services/auth_service.dart](cafeteria/lib/services/auth_service.dart) e referências a `$baseUrl`.
 - A função de conexão com o banco está em [`get_connection`](API/db.py). Garanta que as credenciais em [API/.env](API/.env) estejam corretas.
 - Scripts SQL e modelo de tabelas estão em [Banco de dados - MySql/Modelo_Fisico.txt](Banco de dados - MySql/Modelo_Fisico.txt).
 
