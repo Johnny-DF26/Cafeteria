@@ -5,6 +5,22 @@ import os
 
 load_dotenv()  # lê o .env
 
+def get_connection2():
+    try:
+        connection = mysql.connector.connect(
+            host=os.getenv('DB_HOST_LOCAL'),
+            user=os.getenv('DB_USER_LOCAL'),
+            password=os.getenv('DB_PASSWORD_LOCAL'),
+            database=os.getenv('DB_NAME_LOCAL'),
+            port=int(os.getenv('DB_PORT_LOCAL', 3306))
+        )
+        return connection
+    except Error as e:
+        print(f"Erro ao conectar ao MySQL: {e}")
+        return None
+    
+
+
 def get_connection():
     try:
         connection = mysql.connector.connect(
@@ -14,7 +30,11 @@ def get_connection():
             database=os.getenv('DB_NAME'),
             port=int(os.getenv('DB_PORT', 3306))
         )
-        return connection
+        if conn.is_connected():
+            print("Conectado ao MySQL!")
     except Error as e:
-        print(f"Erro ao conectar ao MySQL: {e}")
-        return None
+            print("Erro detalhado:", e)
+    finally:
+        if 'connection' in locals() and connection.is_connected():
+                connection.close()
+
