@@ -2,6 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+
+
+String get baseUrl => GlobalConfig.GlobalConfig.api();
+
 
 class EditProductScreen extends StatefulWidget {
   const EditProductScreen({super.key});
@@ -24,14 +29,14 @@ class _EditProductScreenState extends State<EditProductScreen> {
   bool produtoCarregado = false;
   bool carregando = false;
 
-  static const String baseUrl = 'http://192.168.0.167:5000';
+  //static const String baseUrl = 'http://192.168.0.167:5000';
 
   Future<void> buscarProduto() async {
     final id = idController.text.trim();
     if (id.isEmpty) return;
 
     setState(() => carregando = true);
-
+    
     try {
       final response = await http.get(Uri.parse('$baseUrl/produtos/$id'));
 

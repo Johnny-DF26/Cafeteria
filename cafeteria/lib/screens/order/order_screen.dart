@@ -9,7 +9,9 @@ import '../global/user_provider.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
 
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 class SolidLinePainter extends CustomPainter {
   final Color color;
   final double strokeWidth;
@@ -55,7 +57,7 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Future<List<Map<String, dynamic>>> fetchOrders(int usuarioId) async {
-    final url = Uri.parse('http://192.168.0.167:5000/listar_pedidos/$usuarioId');
+    final url = Uri.parse('$baseUrl/listar_pedidos/$usuarioId');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {

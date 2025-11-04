@@ -5,7 +5,7 @@ import os
 
 load_dotenv()  # lê o .env
 
-def get_connection2():
+def get_connection():
     try:
         connection = mysql.connector.connect(
             host=os.getenv('DB_HOST'),
@@ -18,12 +18,3 @@ def get_connection2():
     except Error as e:
         print(f"Erro ao conectar ao MySQL: {e}")
         return None
-        
-
-def get_connection():
-    return mysql.connector.connect(
-        host="RAILWAY_HOST",
-        user="RAILWAY_USER",
-        password="RAILWAY_PASSWORD",
-        database="RAILWAY_DB"
-    )

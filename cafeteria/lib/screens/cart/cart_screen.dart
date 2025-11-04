@@ -6,7 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../global/user_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
 
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -35,7 +37,7 @@ class _CartScreenState extends State<CartScreen> {
     setState(() => _isLoading = true);
     try {
       final response = await http.get(
-        Uri.parse("http://192.168.0.167:5000/get_carrinho/$userId"),
+        Uri.parse("$baseUrl/get_carrinho/$userId"),
       );
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -68,7 +70,7 @@ class _CartScreenState extends State<CartScreen> {
   Future<void> updateCartItemQuantity(int cartProdId, int quantity) async {
   try {
     final response = await http.post(
-      Uri.parse("http://192.168.0.167:5000/update_carrinho"),
+      Uri.parse("$baseUrl/update_carrinho"),
       headers: {"Content-Type": "application/json"},
       body: json.encode({
         "idCarrinho_Produtos": cartProdId,
@@ -90,7 +92,7 @@ class _CartScreenState extends State<CartScreen> {
   Future<void> removeCartItem(int cartProdId) async {
     try {
       final response = await http.delete(
-        Uri.parse("http://192.168.0.167:5000/remove_unidade_carrinho/$cartProdId"),
+        Uri.parse("$baseUrl/remove_unidade_carrinho/$cartProdId"),
       );
       if (response.statusCode == 200) {
         setState(() {
@@ -108,7 +110,7 @@ class _CartScreenState extends State<CartScreen> {
   Future<void> removeAllOfThisProduct(int carrinhoId, int produtoId) async {
   try {
     final response = await http.post(
-      Uri.parse("http://192.168.0.167:5000/remove_produto_carrinho"),
+      Uri.parse("$baseUrl/remove_produto_carrinho"),
       headers: {"Content-Type": "application/json"},
       body: json.encode({
         "carrinho_id": carrinhoId,
@@ -120,7 +122,7 @@ class _CartScreenState extends State<CartScreen> {
       print("Produto removido do carrinho com sucesso");
 
       final userId = Provider.of<UserProvider>(context, listen: false).userData?['id'];
-      await fetchCartItems(userId); // 👈 recarrega certo
+      await fetchCartItems(userId); 
     } else {
       print("Erro ao remover produto: ${response.statusCode}");
     }

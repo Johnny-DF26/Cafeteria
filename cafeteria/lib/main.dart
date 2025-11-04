@@ -22,10 +22,13 @@ import 'screens/admin/userManagement/user_management_screen.dart';
 
 // Provider
 import 'screens/global/user_provider.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
 
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  GlobalConfig.GlobalConfig.useOnline = false; // Conecatar ao servidor local ou online
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => UserProvider(),

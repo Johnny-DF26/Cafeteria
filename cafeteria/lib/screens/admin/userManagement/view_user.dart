@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:intl/intl.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
 
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 class BuscarClienteScreen extends StatefulWidget {
   const BuscarClienteScreen({super.key});
 
@@ -27,7 +29,7 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
 
-  final String baseUrl = 'http://192.168.0.167:5000'; // coloque seu IP
+  //final String baseUrl = 'http://192.168.0.167:5000'; // coloque seu IP
 
   @override
   void initState() {

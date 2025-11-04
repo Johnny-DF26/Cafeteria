@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cafeteria/core/routes.dart';
-
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
 
 class AuthException implements Exception {
   final String message;
@@ -9,8 +9,8 @@ class AuthException implements Exception {
 }
 
 class AuthService {
-  final String baseUrl = 'http://192.168.0.167:5000'; // IP da sua API
-
+  //final String baseUrl = 'http://192.168.0.167:5000'; // IP da sua API
+  final String baseUrl = GlobalConfig.GlobalConfig.api();
 
 // ---------------------------------------------------------------------------------------
 // -------------------------

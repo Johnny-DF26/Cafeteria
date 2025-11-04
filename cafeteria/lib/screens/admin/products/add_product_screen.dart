@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+
+
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 
 class AddProductScreen extends StatefulWidget {
   final Map<String, dynamic> adminData;
@@ -26,6 +30,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   Future<void> cadastrarProduto() async {
     if (!_formKey.currentState!.validate()) return;
+    print('Tipo: ${baseUrl.runtimeType}, URL: ${baseUrl}');
 
     setState(() => _loading = true);
 
@@ -43,7 +48,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.0.167:5000/add_products'),
+        Uri.parse('$baseUrl/add_products'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(produtoData),
       );

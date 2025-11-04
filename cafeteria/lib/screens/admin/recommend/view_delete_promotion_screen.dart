@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 
 class ViewDeletePromotionScreen extends StatefulWidget {
   final Map<String, dynamic> adminData; // Recebe o adminData completo
@@ -18,7 +21,7 @@ class _ViewDeletePromotionScreenState extends State<ViewDeletePromotionScreen> {
   bool carregando = false;
   final TextEditingController idController = TextEditingController();
 
-  static const String baseUrl = 'http://192.168.0.167:5000';
+  //static const String baseUrl = 'http://192.168.0.167:5000';
 
   @override
   void initState() {

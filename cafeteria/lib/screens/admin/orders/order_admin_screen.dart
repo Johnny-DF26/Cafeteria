@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:io';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
 
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 
 // Altera o formato da linha (divisória dos produtos)
 class DashedLinePainter extends CustomPainter {
@@ -31,7 +33,7 @@ class DashedLinePainter extends CustomPainter {
 
 class OrderAdminScreen extends StatefulWidget {
   const OrderAdminScreen({super.key});
-
+  
   @override
   State<OrderAdminScreen> createState() => _OrderAdminScreenState();
 }
@@ -43,6 +45,7 @@ class _OrderAdminScreenState extends State<OrderAdminScreen> {
   @override
   void initState() {
     super.initState();
+    print('Tipo: ${baseUrl.runtimeType}, URL: ${baseUrl}');
     _relatoriosFuture = fetchRelatorios();
   }
 
@@ -50,7 +53,7 @@ class _OrderAdminScreenState extends State<OrderAdminScreen> {
   // Busca o relatório dos Pedidos
   //=================================
   Future<List<Map<String, dynamic>>> fetchRelatorios() async {
-    final url = Uri.parse('http://192.168.0.167:5000/relatorios_pedidos'); // endpoint GET
+    final url = Uri.parse('$baseUrl/relatorios_pedidos'); // endpoint GET
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -62,7 +65,7 @@ class _OrderAdminScreenState extends State<OrderAdminScreen> {
   }
 
   Future<List<Map<String, dynamic>>> fetchProdutosDoPedido(int pedidoId, int usuarioId) async {
-    final url = Uri.parse('http://192.168.0.167:5000/listar_pedidos/$usuarioId');
+    final url = Uri.parse('$baseUrl/listar_pedidos/$usuarioId');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -85,7 +88,7 @@ class _OrderAdminScreenState extends State<OrderAdminScreen> {
   // Atualiza o Status do Pedido
   //================================
   Future<void> atualizarStatus(int id, String novoStatus) async {
-    final url = Uri.parse('http://192.168.0.167:5000/update_relatorios_pedidos/$id');
+    final url = Uri.parse('$baseUrl/update_relatorios_pedidos/$id');
     final response = await http.put(
       url,
       headers: {'Content-Type': 'application/json'},

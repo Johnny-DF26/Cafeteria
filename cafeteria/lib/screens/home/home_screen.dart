@@ -6,6 +6,9 @@ import 'package:provider/provider.dart';
 import '../../core/routes.dart';
 import '../global/user_provider.dart';
 import 'package:cafeteria/screens/home/product_detail_screen.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -78,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ==========================
   Future<void> fetchUserFavorites(int userId) async {
     try {
-      final response = await http.get(Uri.parse("http://192.168.0.167:5000/favoritos/$userId"));
+      final response = await http.get(Uri.parse("$baseUrl/favoritos/$userId"));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         if (mounted) {
@@ -108,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final messenger = ScaffoldMessenger.of(context);
     try {
       final response = await http.post(
-        Uri.parse("http://192.168.0.167:5000/favoritos"),
+        Uri.parse("$baseUrl/favoritos"),
         headers: {"Content-Type": "application/json"},
         body: json.encode({"Usuario_idUsuario": userId, "Produtos_idProdutos": produtoId}),
       );
@@ -131,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       if (fav.isNotEmpty) {
         final response =
-            await http.delete(Uri.parse("http://192.168.0.167:5000/favoritos/${fav['idFavoritos']}"));
+            await http.delete(Uri.parse("$baseUrl/favoritos/${fav['idFavoritos']}"));
         if (response.statusCode == 200) {
           fetchUserFavorites(userId);
           messenger.showSnackBar(SnackBar(content: Text("Produto removido dos favoritos!")));
@@ -149,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ==========================
   Future<void> fetchProdutos() async {
     try {
-      final response = await http.get(Uri.parse("http://192.168.0.167:5000/produtos"));
+      final response = await http.get(Uri.parse("$baseUrl/produtos"));
       if (response.statusCode == 200) {
         final List<dynamic> rawData = json.decode(response.body);
         final data = rawData.map((e) => Map<String, dynamic>.from(e)).toList();
@@ -498,7 +501,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             final produtoId = item['idProdutos'];
                                             try {
                                               final response = await http.post(
-                                                Uri.parse("http://192.168.0.167:5000/add_carrinho"),
+                                                Uri.parse("$baseUrl/add_carrinho"),
                                                 headers: {"Content-Type": "application/json"},
                                                 body: json.encode({
                                                   "usuario_id": userId,
@@ -874,7 +877,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           try {
                             final response = await http.post(
-                              Uri.parse("http://192.168.0.167:5000/add_carrinho"),
+                              Uri.parse("$baseUrl/add_carrinho"),
                               headers: {"Content-Type": "application/json"},
                               body: json.encode({
                                 "usuario_id": userId,

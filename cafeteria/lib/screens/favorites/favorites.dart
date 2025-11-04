@@ -6,6 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../global/user_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 
 class FavoriteScreen extends StatefulWidget {
   const FavoriteScreen({super.key});
@@ -35,7 +38,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
     }
 
     try {
-      final response = await http.get(Uri.parse("http://192.168.0.167:5000/favoritos/$userId"));
+      final response = await http.get(Uri.parse("$baseUrl/favoritos/$userId"));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -66,7 +69,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
   // Remover Favoritos
   Future<void> removeFavorite(int favId) async {
     try {
-      final response = await http.delete(Uri.parse("http://192.168.0.167:5000/favoritos/$favId"));
+      final response = await http.delete(Uri.parse("$baseUrl/favoritos/$favId"));
       if (response.statusCode == 200) {
         setState(() {
           favorites.removeWhere((element) => element['idFavoritos'] == favId);
@@ -85,7 +88,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse("http://192.168.0.167:5000/add_carrinho"),
+        Uri.parse("$baseUrl/add_carrinho"),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "usuario_id": userId,

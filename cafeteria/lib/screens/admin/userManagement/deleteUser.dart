@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 
 class DeleteUserScreen extends StatefulWidget {
   final int userId; // ID do usuário que será excluído
-
   const DeleteUserScreen({super.key, required this.userId});
 
   @override
@@ -12,11 +14,10 @@ class DeleteUserScreen extends StatefulWidget {
 
 class _DeleteUserScreenState extends State<DeleteUserScreen> {
   bool _loading = false;
-
   void _deleteUser() async {
     setState(() => _loading = true);
 
-    final url = Uri.parse('http://192.168.0.167:5000/usuario');
+    final url = Uri.parse('$baseUrl/usuario');
 
     try {
       final response = await http.delete(url);

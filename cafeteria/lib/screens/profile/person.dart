@@ -6,6 +6,10 @@ import 'package:provider/provider.dart';
 import '../../core/routes.dart';
 import '../global/user_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+
+String get baseUrl => GlobalConfig.GlobalConfig.api();
+
 
 class PersonalScreen extends StatefulWidget {
   const PersonalScreen({super.key});
@@ -81,7 +85,7 @@ class _PersonalScreenState extends State<PersonalScreen> {
       return;
     }
 
-    final url = Uri.parse('http://192.168.0.167:5000/get_usuario/${user['id']}');
+    final url = Uri.parse('$baseUrl/get_usuario/${user['id']}');
 
     try {
       final response = await http.get(url);
@@ -129,7 +133,7 @@ class _PersonalScreenState extends State<PersonalScreen> {
 
     setState(() => saving = true);
 
-    final url = Uri.parse('http://192.168.0.167:5000/update_usuario/${user['id']}');
+    final url = Uri.parse('$baseUrl/update_usuario/${user['id']}');
 
     try {
       final response = await http.put(

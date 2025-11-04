@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../core/routes.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -42,7 +45,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _loading = true);
 
-    final url = Uri.parse('http://192.168.0.167:5000/cadastro_usuario');
+    final url = Uri.parse('$baseUrl/cadastro_usuario');
     print('entrou aqui!'); // IP do PC na rede
     final body = jsonEncode({
       'nome': _nameCtrl.text.trim(),

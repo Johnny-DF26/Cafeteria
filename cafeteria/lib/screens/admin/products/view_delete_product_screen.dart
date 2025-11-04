@@ -2,6 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+
+
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 
 class ViewDeleteProductScreen extends StatefulWidget {
   const ViewDeleteProductScreen({super.key});
@@ -17,7 +21,7 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
   bool carregando = false;
   final TextEditingController idController = TextEditingController();
 
-  static const String baseUrl = 'http://192.168.0.167:5000';
+  //static const String baseUrl = 'http://192.168.0.167:5000';
 
   @override
   void initState() {

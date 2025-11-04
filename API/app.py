@@ -1359,12 +1359,4 @@ def atualizar_status(id_relatorio):
 # Rota Home
 # ------------------------
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=True)
-
-
-#-------------------------
-# Teste
-#-------------------------
-@app.route("/teste")
-def teste():
-    return {"status": "API funcionando!"}
+    app.run(host='0.0.0.0', port=5000, debug=True)

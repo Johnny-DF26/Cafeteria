@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 //import '../../core/routes.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 
 class AddUserScreen extends StatefulWidget {
   final Map<String, dynamic> adminData;
@@ -45,7 +48,7 @@ class _AddUserScreenState extends State<AddUserScreen> {
     setState(() => _loading = true);
     final adminId = widget.adminData['id'];
     print('ID: $adminId');
-    final url = Uri.parse('http://192.168.0.167:5000/adicionar_usuario/$adminId');
+    final url = Uri.parse('$baseUrl/adicionar_usuario/$adminId');
     print(url); // IP do PC na rede
     final body = jsonEncode({
       'nome': _nameCtrl.text.trim(),

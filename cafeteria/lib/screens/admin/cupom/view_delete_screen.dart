@@ -2,10 +2,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+
 
 class ViewDeleteCouponScreen extends StatefulWidget {
   final int adminId; // ID do administrador logado
   const ViewDeleteCouponScreen({super.key, required this.adminId});
+
 
   @override
   State<ViewDeleteCouponScreen> createState() => _ViewDeleteCouponScreenState();
@@ -16,12 +19,13 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
   List<Map<String, dynamic>> cuponsFiltrados = [];
   bool carregando = false;
   final TextEditingController codigoController = TextEditingController();
+  String get baseUrl => GlobalConfig.GlobalConfig.api();
 
-  static const String baseUrl = 'http://192.168.0.167:5000';
 
   @override
   void initState() {
     super.initState();
+    print('Tipo: ${baseUrl.runtimeType}, URL: ${baseUrl}');
     buscarCupons();
   }
 

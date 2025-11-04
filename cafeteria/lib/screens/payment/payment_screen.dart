@@ -9,7 +9,9 @@ import '../global/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
 
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 
 
 class PaymentScreen extends StatefulWidget {
@@ -57,7 +59,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   // Busca no Carrinho 
   Future<void> fetchCart(int? userId) async {
     if (userId == null) return;
-    final response = await http.get(Uri.parse('http://192.168.0.167:5000/get_carrinho/$userId'));
+    final response = await http.get(Uri.parse('$baseUrl/get_carrinho/$userId'));
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
       setState(() {
@@ -82,7 +84,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   final newQuantity = item['quantity'] - 1;
   final response = await http.post(
-    Uri.parse('http://192.168.0.167:5000/update_carrinho'),
+    Uri.parse('$baseUrl/update_carrinho'),
     headers: {"Content-Type": "application/json"},
     body: jsonEncode({
       "idCarrinho_Produtos": item['idCarrinhoProduto'],
@@ -101,7 +103,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Future<void> _increaseItem(Map<String, dynamic> item) async {
     final newQuantity = item['quantity'] + 1;
     final response = await http.post(
-      Uri.parse('http://192.168.0.167:5000/update_carrinho'),
+      Uri.parse('$baseUrl/update_carrinho'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "idCarrinho_Produtos": item['idCarrinhoProduto'],
@@ -119,7 +121,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   // Remove produto do carrinho
   Future<void> _removeItem(Map<String, dynamic> item) async {
     final response = await http.post(
-      Uri.parse('http://192.168.0.167:5000/remove_produto_carrinho'),
+      Uri.parse('$baseUrl/remove_produto_carrinho'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "carrinho_id": item['idCarrinho'],
@@ -141,7 +143,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (userData == null) return;
 
     final response = await http.get(
-        Uri.parse('http://192.168.0.167:5000/endereco_usuario/${userData['id']}')
+        Uri.parse('$baseUrl/endereco_usuario/${userData['id']}')
     );
 
     if (response.statusCode == 200) {
@@ -174,7 +176,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     int? cartaoId;
     if (selectedPayment == "Cartão de Crédito") {
       final resCard = await http.post(
-        Uri.parse('http://192.168.0.167:5000/payment_card'),
+        Uri.parse('$baseUrl/payment_card'),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "nome": cardNameController.text,
@@ -192,7 +194,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     // Enviar pagamento
     await http.post(
-      Uri.parse('http://192.168.0.167:5000/pagamento'),
+      Uri.parse('$baseUrl/pagamento'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "usuario_id": userData['id'],
@@ -264,7 +266,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     // Envio para API    
     final response = await http.post(
-      Uri.parse("http://192.168.0.167:5000/criar_pedido"),
+      Uri.parse("$baseUrl/criar_pedido"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "usuario_id": userData?["id"],
@@ -300,7 +302,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   // Limpar Carrinho 
   Future<void> clearCartBackend(int userId) async {
     final response = await http.post(
-      Uri.parse('http://192.168.0.167:5000/limpar_carrinho/$userId'),
+      Uri.parse('$baseUrl/limpar_carrinho/$userId'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"usuario_id": userId}),
     );
@@ -550,7 +552,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     onPressed: () async {
                       final code = couponController.text.trim();
                       final response = await http.post(
-                        Uri.parse('http://192.168.0.167:5000/validar_cupom'),
+                        Uri.parse('$baseUrl/validar_cupom'),
                         headers: {"Content-Type": "application/json"},
                         body: jsonEncode({"codigo": code}),
                       );

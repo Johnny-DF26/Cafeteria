@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
 
+String get baseUrl => GlobalConfig.GlobalConfig.api();
 class UserService {
-  static const String baseUrl = 'http://192.168.0.167:5000'; // seu IP + porta da API
+  //static const String baseUrl = 'http://192.168.0.167:5000'; // seu IP + porta da API
 
   // Busca quantidade de usuários no banco
   static Future<int> fetchUserCount() async {

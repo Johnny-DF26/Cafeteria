@@ -6,6 +6,11 @@ import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/routes.dart';
 import '../global/user_provider.dart';
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+
+String get baseUrl => GlobalConfig.GlobalConfig.api();
+
+
 
 class AddressScreen extends StatefulWidget {
   const AddressScreen({super.key});
@@ -34,7 +39,7 @@ class _AddressScreenState extends State<AddressScreen> {
       return;
     }
 
-    final url = Uri.parse('http://192.168.0.167:5000/get_endereco/${userData['id']}');
+    final url = Uri.parse('$baseUrl/get_endereco/${userData['id']}');
     try {
       final response = await http.get(url).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
@@ -64,8 +69,8 @@ class _AddressScreenState extends State<AddressScreen> {
     }
 
     final url = idEndereco == null
-        ? Uri.parse('http://192.168.0.167:5000/add_endereco')
-        : Uri.parse('http://192.168.0.167:5000/update_endereco/$idEndereco');
+        ? Uri.parse('$baseUrl/add_endereco')
+        : Uri.parse('$baseUrl/update_endereco/$idEndereco');
 
     try {
       final body = jsonEncode({
@@ -103,7 +108,7 @@ class _AddressScreenState extends State<AddressScreen> {
   }
 
   Future<void> deleteAddress(int idEndereco) async {
-    final url = Uri.parse('http://192.168.0.167:5000/delete_endereco/$idEndereco');
+    final url = Uri.parse('$baseUrl/delete_endereco/$idEndereco');
     try {
       final response = await http.delete(url).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
