@@ -30,11 +30,10 @@ def get_connection():
             database=os.getenv('DB_NAME'),
             port=int(os.getenv('DB_PORT', 3306))
         )
-        if conn.is_connected():
+        if connection.is_connected():
             print("Conectado ao MySQL!")
+        return connection
     except Error as e:
-            print("Erro detalhado:", e)
-    finally:
-        if 'connection' in locals() and connection.is_connected():
-                connection.close()
+        print("Erro detalhado:", e)
+        return None
 

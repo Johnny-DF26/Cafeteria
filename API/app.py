@@ -4,6 +4,7 @@ from db import get_connection  # sua função para conectar ao MySQL
 from datetime import datetime
 from mysql.connector import Error
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -1359,4 +1360,12 @@ def atualizar_status(id_relatorio):
 # Rota Home
 # ------------------------
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Railway define a porta automaticamente
+    app.run(host='0.0.0.0', port=port, debug=True)
+
+
+
+@app.route("/teste_db")
+def teste_db():
+    return {"status": "ok"}
+
