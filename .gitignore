@@ -1,0 +1,15 @@
+# Python / Flask
+api/__pycache__/
+api/*.pyc
+api/.venv/
+api/venv/
+api/.env
+
+# Flutter
+cafeteria/.dart_tool/
+cafeteria/.idea/
+cafeteria/build/
+cafeteria/.vscode/
+
+# Banco/geral
+banco/.DS_Store
