@@ -117,7 +117,7 @@ class _AddressScreenState extends State<AddressScreen> {
     final numeroController = TextEditingController(text: addr?['numero']?.toString() ?? '');
     final bairroController = TextEditingController(text: addr?['bairro'] ?? '');
     final cidadeController = TextEditingController(text: addr?['cidade'] ?? '');
-    final estadoController = TextEditingController(text: addr?['estado'] ?? '');
+    final estadoController = TextEditingController(text: addr?['estado (UF)'] ?? '');
     final cepController = TextEditingController(text: addr?['cep'] ?? '');
     final complementoController = TextEditingController(text: addr?['complemento'] ?? '');
     final referenciaController = TextEditingController(text: addr?['referencia'] ?? '');
