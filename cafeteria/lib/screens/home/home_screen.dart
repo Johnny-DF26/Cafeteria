@@ -9,7 +9,6 @@ import 'package:cafeteria/screens/home/product_detail_screen.dart';
 import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
 
 String get baseUrl => GlobalConfig.GlobalConfig.api();
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -875,6 +874,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             return;
                           }
 
+                          
                           try {
                             final response = await http.post(
                               Uri.parse("$baseUrl/add_carrinho"),

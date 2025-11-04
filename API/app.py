@@ -985,7 +985,7 @@ def get_carrinho(user_id):
                p.valor,
                p.imagem,
                cp.quantidade
-        FROM carrinho_Produto cp
+        FROM carrinho_produto cp
         JOIN carrinho c ON cp.Carrinho_idCarrinho = c.idCarrinho
         JOIN produtos p ON cp.Produtos_idProdutos = p.idProdutos
         WHERE c.Usuario_idUsuario = %s
@@ -1030,7 +1030,7 @@ def add_carrinho():
 
     # 2️⃣ Verifica se o produto já está no carrinho
     cur.execute(
-        "SELECT idCarrinho_Produtos, quantidade FROM carrinho_Produto WHERE Carrinho_idCarrinho=%s AND Produtos_idProdutos=%s",
+        "SELECT idCarrinho_Produtos, quantidade FROM carrinho_produto WHERE Carrinho_idCarrinho=%s AND Produtos_idProdutos=%s",
         (carrinho_id, produto_id)
     )
     produto_no_carrinho = cur.fetchone()
@@ -1039,13 +1039,13 @@ def add_carrinho():
         # Atualiza quantidade
         nova_quantidade = produto_no_carrinho[1] + quantidade
         cur.execute(
-            "UPDATE carrinho_Produto SET quantidade=%s, data_criacao=NOW() WHERE idCarrinho_Produtos=%s",
+            "UPDATE carrinho_produto SET quantidade=%s, data_criacao=NOW() WHERE idCarrinho_Produtos=%s",
             (nova_quantidade, produto_no_carrinho[0])
         )
     else:
         # Insere produto novo no carrinho correto
         cur.execute(
-            "INSERT INTO carrinho_Produto (Carrinho_idCarrinho, Produtos_idProdutos, quantidade, data_criacao) VALUES (%s, %s, %s, NOW())",
+            "INSERT INTO carrinho_produto (Carrinho_idCarrinho, Produtos_idProdutos, quantidade, data_criacao) VALUES (%s, %s, %s, NOW())",
             (carrinho_id, produto_id, quantidade)
         )
 
