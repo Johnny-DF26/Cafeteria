@@ -18,20 +18,21 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   final double shippingFee = 4.0; // frete fixo
   List<Map<String, dynamic>> cartItems = [];
+  bool _isLoading = true;
 
   @override
   void didChangeDependencies() {
-  super.didChangeDependencies();
-  final userProvider = Provider.of<UserProvider>(context, listen: false);
-  final userData = userProvider.userData;
-  final userId = userData?['id'];
+    super.didChangeDependencies();
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final userData = userProvider.userData;
+    final userId = userData?['id'];
 
-  fetchCartItems(userId);
-}
-
+    fetchCartItems(userId);
+  }
 
   // Visualizar os produtos no carrinho
   Future<void> fetchCartItems(int? userId) async {
+    setState(() => _isLoading = true);
     try {
       final response = await http.get(
         Uri.parse("http://192.168.0.167:5000/get_carrinho/$userId"),
@@ -56,6 +57,10 @@ class _CartScreenState extends State<CartScreen> {
       }
     } catch (e) {
       print("Erro ao buscar carrinho: $e");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -166,78 +171,84 @@ class _CartScreenState extends State<CartScreen> {
         ],
       ),
       
-      body: cartItems.isEmpty
-          ? const Center(child: Text("Seu carrinho está vazio", style: TextStyle(fontSize: 18)))
-          : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Carrinho",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.brown.shade700,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ...List.generate(cartItems.length, (index) {
-                      final item = cartItems[index];
-                      bool isSmall = screenWidth < 500;
-
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 6,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: isSmall
-                              ? Column(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: item['image'] != null && item['image'].isNotEmpty
-                                          ? Image.asset(item['image'], width: double.infinity, height: 180, fit: BoxFit.cover)
-                                          : Container(
-                                              width: double.infinity,
-                                              height: 180,
-                                              color: Colors.grey[300],
-                                              child: const Icon(Icons.image, color: Colors.grey),
-                                            ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    _buildCartItemInfo(item, index),
-                                  ],
-                                )
-                              : Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: item['image'] != null && item['image'].isNotEmpty
-                                          ? Image.asset(item['image'], width: screenWidth * 0.35, height: 180, fit: BoxFit.cover)
-                                          : Container(
-                                              width: screenWidth * 0.35,
-                                              height: 180,
-                                              color: Colors.grey[300],
-                                              child: const Icon(Icons.image, color: Colors.grey),
-                                            ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(child: _buildCartItemInfo(item, index)),
-                                  ],
-                                ),
-                        ),
-                      );
-                    }),
-                  ],
-                ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Colors.brown,
               ),
-            ),
+            )
+          : cartItems.isEmpty
+              ? const Center(child: Text("Seu carrinho está vazio", style: TextStyle(fontSize: 18)))
+              : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Carrinho",
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.brown.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ...List.generate(cartItems.length, (index) {
+                          final item = cartItems[index];
+                          bool isSmall = screenWidth < 500;
+
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 6,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: isSmall
+                                  ? Column(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: item['image'] != null && item['image'].isNotEmpty
+                                              ? Image.asset(item['image'], width: double.infinity, height: 180, fit: BoxFit.cover)
+                                              : Container(
+                                                  width: double.infinity,
+                                                  height: 180,
+                                                  color: Colors.grey[300],
+                                                  child: const Icon(Icons.image, color: Colors.grey),
+                                                ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        _buildCartItemInfo(item, index),
+                                      ],
+                                    )
+                                  : Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: item['image'] != null && item['image'].isNotEmpty
+                                              ? Image.asset(item['image'], width: screenWidth * 0.35, height: 180, fit: BoxFit.cover)
+                                              : Container(
+                                                  width: screenWidth * 0.35,
+                                                  height: 180,
+                                                  color: Colors.grey[300],
+                                                  child: const Icon(Icons.image, color: Colors.grey),
+                                                ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(child: _buildCartItemInfo(item, index)),
+                                      ],
+                                    ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

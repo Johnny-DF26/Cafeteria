@@ -257,7 +257,7 @@ class _ViewDeletePromotionScreenState extends State<ViewDeletePromotionScreen> {
   @override
   Widget build(BuildContext context) {
     final adminNome = widget.adminData['nome'] ?? 'Administrador';
-
+    //print(promocoesFiltradas[34]['imagem']);
     return Scaffold(
       backgroundColor: Colors.white,
       body: CustomScrollView(
@@ -373,7 +373,7 @@ class _ViewDeletePromotionScreenState extends State<ViewDeletePromotionScreen> {
                                                 top: Radius.circular(12)),
                                         child: produto['imagem'] != null &&
                                                 produto['imagem'].isNotEmpty
-                                            ? Image.network(
+                                            ? Image.asset(
                                                 produto['imagem'],
                                                 width: double.infinity,
                                                 height: 200,

@@ -88,7 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // debug rápido quando não há dados (apenas em debug)
     if (kDebugMode && (userData == null || userData.isEmpty)) {
       // ignore: avoid_print
-      print('ProfileScreen: userData vazio => $userData');
+      //print('ProfileScreen: userData vazio => $userData');
     }
 
     final name = _pick(userData, ['nome_completo', 'nome_social', 'nome']);
@@ -98,7 +98,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final telefone = _pick(userData, ['telefone', 'telefone_celular', 'celular', 'fone']);
     final dataNascRaw = _pick(userData, ['data_nascimento', 'dataNascimento', 'data_nasc']);
     final dataNasc = dataNascRaw == '-' ? '-' : _formatDate(dataNascRaw);
-
     final isWide = MediaQuery.of(context).size.width > 600;
 
     final navItems = <BottomNavigationBarItem>[
@@ -118,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SliverAppBar(
               pinned: true,
               backgroundColor: Colors.brown.shade700,
-              expandedHeight: 160,
+              expandedHeight: 110,
               automaticallyImplyLeading: false,
               flexibleSpace: FlexibleSpaceBar(
                 centerTitle: true,

@@ -287,7 +287,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
       clearCartBackend(userData?["id"]); // Essa função limpa o carrinho de compras do bd
       cartItems.clear();
       Navigator.pushNamedAndRemoveUntil(context, Routes.order, (_) => false);
-      const SnackBar(content: Text("Pagamento confirmado e pedido gerado!"));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Pagamento confirmado e pedido gerado!")),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Erro ao salvar pedido!")),

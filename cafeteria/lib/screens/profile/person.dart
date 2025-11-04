@@ -212,7 +212,7 @@ class _PersonalScreenState extends State<PersonalScreen> {
           SliverAppBar(
             pinned: true,
             backgroundColor: Colors.brown.shade700,
-            expandedHeight: 120,
+            expandedHeight: 110,
             automaticallyImplyLeading: false,
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,

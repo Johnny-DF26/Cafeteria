@@ -87,6 +87,9 @@ def login():
                     'idUsuario': user.get('idUsuario'),
                     'nome': user.get('nome_completo'),
                     'email': user.get('email'),
+                    'telefone': user.get('telefone'),
+                    'endereco': user.get('endereco'),
+                    'dataNascimento': user.get('data_nascimento'),
                 }
             }), 200
 

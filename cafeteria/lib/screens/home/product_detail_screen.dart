@@ -17,14 +17,21 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int quantity = 1;
   bool isFav = false;
-  int? favId; // idFavoritos retornado pela API (quando aplicável)
+  int? favId;
   bool _loadingFav = false;
   bool _adding = false;
+  final TextEditingController _observationController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadFavoriteState());
+  }
+
+  @override
+  void dispose() {
+    _observationController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadFavoriteState() async {
@@ -147,15 +154,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       backgroundColor: const Color.fromARGB(255, 248, 232, 225),
       appBar: AppBar(
         backgroundColor: Colors.brown.shade700,
-        title: Text("Café Gourmet", style: GoogleFonts.pacifico(), textAlign: TextAlign.center),
-        actions: [
-          IconButton(
-            icon: _loadingFav
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : Icon(isFav ? Icons.favorite : Icons.favorite_border, color: Colors.redAccent),
-            onPressed: _loadingFav ? null : _toggleFavorite,
-          ),
-        ],
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        title: Text(
+          "Café Gourmet", 
+          style: GoogleFonts.pacifico(color: Colors.white, fontSize: 30),
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -171,10 +175,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ? Image.asset(product['imagem'], fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(color: Colors.grey.shade200))
                         : Container(color: Colors.grey.shade200, child: const Icon(Icons.image, size: 80, color: Colors.grey)),
                   ),
-                  // badge preço
+                  // badge preço - movido para inferior direito
                   Positioned(
-                    left: 16,
-                    top: 16,
+                    right: 16,
+                    bottom: 16,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
@@ -183,6 +187,24 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 6, offset: const Offset(0, 3))],
                       ),
                       child: Text('R\$ $priceStr', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                  ),
+                  // botão favorito - superior direito
+                  Positioned(
+                    right: 16,
+                    top: 16,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(166, 255, 255, 255),
+                        shape: BoxShape.circle,
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 6, offset: const Offset(0, 3))],
+                      ),
+                      child: IconButton(
+                        icon: _loadingFav
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.brown))
+                            : Icon(isFav ? Icons.favorite : Icons.favorite_border, color: Colors.redAccent, size: 28),
+                        onPressed: _loadingFav ? null : _toggleFavorite,
+                      ),
                     ),
                   ),
                 ],
@@ -195,20 +217,40 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(product['nome']?.toString() ?? "Produto", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          product['nome']?.toString() ?? "Produto", 
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Text(
+                        product['categoria']?.toString() ?? "",
+                        style: TextStyle(color: Colors.brown.shade700, fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
-                      // avaliação se existir
-                      if (product['avaliacao'] != null)
-                        Row(
-                          children: List.generate(5, (i) {
-                            final rating = double.tryParse(product['avaliacao']?.toString() ?? "0") ?? 0;
-                            return Icon(i < rating ? Icons.star : Icons.star_border, size: 16, color: Colors.amber);
-                          }),
-                        ),
-                      const Spacer(),
-                      Text(product['categoria']?.toString() ?? "", style: TextStyle(color: Colors.brown.shade700)),
+                      // avaliação
+                      Row(
+                        children: List.generate(5, (i) {
+                          final rating = double.tryParse(product['avaliacao']?.toString() ?? "0") ?? 0;
+                          return Icon(
+                            i < rating.floor() ? Icons.star : Icons.star_border, 
+                            size: 18, 
+                            color: Colors.amber.shade700
+                          );
+                        }),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "${product['avaliacao']?.toString() ?? ''}",
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -237,13 +279,49 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.brown.shade700, padding: const EdgeInsets.symmetric(vertical: 14)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.brown.shade700, 
+                            padding: const EdgeInsets.symmetric(vertical: 14), 
+                            foregroundColor: Colors.white,
+                          ),
                           onPressed: _adding ? null : _addToCart,
                           icon: _adding ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.shopping_cart),
-                          label: Text(_adding ? "Adicionando..." : "Adicionar ($quantity) - R\$ ${ (price * quantity).toStringAsFixed(2).replaceAll('.', ',') }"),
+                          label: Text(
+                            _adding ? "Adicionando..." : "Adicionar - R\$ ${(price * quantity).toStringAsFixed(2).replaceAll('.', ',')}",
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // campo de observação
+                  const Text(
+                    "Observações",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _observationController,
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      hintText: "Ex: Sem açúcar, extra quente, etc.",
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 24),
                 ],
@@ -260,14 +338,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       if (index == 0) {
         Navigator.pushNamed(context, Routes.favorites);
       } else if (index == 1) {
-        Navigator.pushNamed(context, Routes.cart);
+        Navigator.pushNamed(context, Routes.home);
       } else if (index == 2) {
         Navigator.pushNamed(context, Routes.order);
       }
     },
     items: const [
       BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favoritos'),
-      BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Carrinho'),
+      BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
       BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Pedidos'),
     ],
   ),

@@ -27,8 +27,7 @@ class AuthService {
     );
 
     final data = jsonDecode(response.body);
-    //print('API retornou: $data'); 
-
+    
     if (response.statusCode != 200){
     throw AuthException(data['error'] ?? 'Erro desconhecido');
     }
@@ -37,6 +36,10 @@ class AuthService {
       'id': data['user']['idUsuario'],
       'nome': data['user']['nome'],
       'email': data['user']['email'],
+      'cpf': data['user']['cpf'],
+      'telefone': data['user']['telefone'],
+      'endereco': data['user']['endereco'],
+      'dataNascimento': data['user']['dataNascimento'],
     };
   }
 
