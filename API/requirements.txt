@@ -4,3 +4,4 @@ Flask-Cors==3.0.10
 Flask-SQLAlchemy==3.0.5
 pymysql==1.1.1
 python-dotenv==1.0.0
+mysql-connector-python==8.1.0
