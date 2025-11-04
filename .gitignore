@@ -1,9 +1,9 @@
 # Python / Flask
-api/__pycache__/
-api/*.pyc
-api/.venv/
-api/venv/
-api/.env
+API/__pycache__/
+API/*.pyc
+API/.venv/
+API/venv/
+API/.env
 
 # Flutter
 cafeteria/.dart_tool/
@@ -11,5 +11,6 @@ cafeteria/.idea/
 cafeteria/build/
 cafeteria/.vscode/
 
-# Banco/geral
-banco/.DS_Store
+# Geral
+teste/
+.DS_Store
