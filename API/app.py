@@ -525,7 +525,7 @@ def add_product():
     cursor = conn.cursor()
     try:
         sql = """
-            INSERT INTO Produtos 
+            INSERT INTO produtos 
             (nome, descricao, valor, imagem, quantidade_estoque,
              data_cadastro, vitrine_idVitrine, administrador_idAdministrador, categoria)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -986,8 +986,8 @@ def get_carrinho(user_id):
                p.imagem,
                cp.quantidade
         FROM carrinho_Produto cp
-        JOIN Carrinho c ON cp.Carrinho_idCarrinho = c.idCarrinho
-        JOIN Produtos p ON cp.Produtos_idProdutos = p.idProdutos
+        JOIN carrinho c ON cp.Carrinho_idCarrinho = c.idCarrinho
+        JOIN produtos p ON cp.Produtos_idProdutos = p.idProdutos
         WHERE c.Usuario_idUsuario = %s
     """, (user_id,))
     
@@ -1012,7 +1012,7 @@ def add_carrinho():
 
     # 1️⃣ Verifica se existe carrinho aberto para o usuário
     cur.execute(
-        "SELECT idCarrinho FROM Carrinho WHERE Usuario_idUsuario=%s AND status='aberto'",
+        "SELECT idCarrinho FROM carrinho WHERE Usuario_idUsuario=%s AND status='aberto'",
         (usuario_id,)
     )
     carrinho = cur.fetchone()
@@ -1022,7 +1022,7 @@ def add_carrinho():
     else:
         # Cria novo carrinho sem coluna inexistente
         cur.execute(
-            "INSERT INTO Carrinho (data_criacao, Usuario_idUsuario, status) VALUES (NOW(), %s, 'aberto')",
+            "INSERT INTO carrinho (data_criacao, Usuario_idUsuario, status) VALUES (NOW(), %s, 'aberto')",
             (usuario_id,)
         )
         conn.commit()
@@ -1290,7 +1290,7 @@ def listar_pedidos_usuario(usuario_id):
         cur.execute("""
             SELECT p.nome, rp.quantidade, rp.preco_unitario
             FROM Relatorio_Pedido_Produto rp
-            JOIN Produtos p ON p.idProdutos = rp.Produto_id
+            JOIN produtos p ON p.idProdutos = rp.Produto_id
             WHERE rp.Relatorio_Pedido_id = %s
         """, (pedido["idRelatorio_Pedido"],))
         pedido["items"] = cur.fetchall()
@@ -1363,8 +1363,9 @@ if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8080))  # Railway define a porta automaticamente
     app.run(host='0.0.0.0', port=port, debug=True)
 
-
-
+#-----------------------------
+# Teste
+#-----------------------------
 @app.route("/teste_db")
 def teste_db():
     return {"status": "ok"}

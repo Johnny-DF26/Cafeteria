@@ -1,3 +1,0 @@
-//import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
-
-//String get baseUrl => GlobalConfig.GlobalConfig.api();
