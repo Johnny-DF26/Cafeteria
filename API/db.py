@@ -5,7 +5,7 @@ import os
 
 load_dotenv()  # lê o .env
 
-def get_connection2():
+def get_connection2(): # Conexão com o banco de dados MySQL localmente. Obs mudar para connection
     try:
         connection = mysql.connector.connect(
             host=os.getenv('DB_HOST_LOCAL'),
@@ -21,7 +21,7 @@ def get_connection2():
     
 
 
-def get_connection():
+def get_connection(): # Conexão com o banco de dados MySQL no Railway
     try:
         connection = mysql.connector.connect(
             host=os.getenv('DB_HOST'),
