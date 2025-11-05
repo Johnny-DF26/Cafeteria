@@ -283,6 +283,7 @@ def get_usuario(id):
         'data_ultimo_acesso', 'ativo', 'Administrador_idAdministrador'
     ]
     return jsonify(dict(zip(keys, user)))
+
 #=======================
 #   Atualizar usuário
 #=======================
@@ -304,6 +305,86 @@ def update_usuario(id):
     cursor.close()
     conn.close()
     return jsonify({'message': 'Usuário atualizado com sucesso!'})
+
+#============================
+# Atualizar Senha
+#============================
+
+@app.route('/update_senha/<int:user_id>', methods=['PUT'])
+def update_password(user_id):
+    data = request.get_json()
+    
+    # Pegar dados do request
+    current_password = data.get('currentPassword')
+    new_password = data.get('newPassword')
+
+    # Validações básicas
+    if not current_password or not new_password:
+        return jsonify({
+            'success': False,
+            'message': 'Senha atual e nova senha são obrigatórias'
+        }), 400
+
+    if len(new_password) < 6:
+        return jsonify({
+            'success': False,
+            'message': 'A nova senha deve ter pelo menos 6 caracteres'
+        }), 400
+
+    # Conectar ao banco de dados
+    conn = get_connection()
+    if conn is None:
+        return jsonify({
+            'success': False,
+            'message': '⚠️ Não foi possível conectar ao banco de dados'
+        }), 500
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # 1. Buscar o usuário no banco
+        cursor.execute(
+            "SELECT idUsuario, senha FROM usuario WHERE idUsuario = %s AND ativo = 1",
+            (user_id,)
+        )
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({
+                'success': False,
+                'message': '❌ Usuário não encontrado'
+            }), 404
+
+        # 2. Verificar se a senha atual está correta
+        if user['senha'] != current_password:
+            return jsonify({
+                'success': False,
+                'message': '❌ Senha atual incorreta'
+            }), 401
+
+        # 3. Atualizar a senha no banco
+        cursor.execute(
+            """UPDATE usuario 
+               SET senha = %s, data_ultimo_acesso = NOW() 
+               WHERE idUsuario = %s""",
+            (new_password, user_id)
+        )
+        conn.commit()
+
+        # 4. Retornar sucesso
+        return jsonify({
+            'success': True,
+            'message': '✅ Senha atualizada com sucesso'
+        }), 200
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'❌ Erro ao atualizar senha: {str(e)}'
+        }), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 # ===================================================================================================================================================================================
@@ -1360,9 +1441,8 @@ def atualizar_status(id_relatorio):
 # Rota Home
 # ------------------------
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8080))  # Railway define a porta automaticamente
-    app.run(host='0.0.0.0', port=port, debug=True)
-
+    app.run(host='0.0.0.0', port=5000, debug=True)
+    #app.run(host='0.0.0.0', port=8080, debug=True)
 #-----------------------------
 # Teste
 #-----------------------------

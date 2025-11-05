@@ -242,7 +242,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         else if (deliveryOption == "cadastrado") {
           if (userAddresses.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Nenhum endereço cadastrado!")),
+              const SnackBar(content: Text("⚠️ Nenhum endereço cadastrado!")),
             );
             return; // Impede continuar
           }
@@ -290,11 +290,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
       cartItems.clear();
       Navigator.pushNamedAndRemoveUntil(context, Routes.order, (_) => false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Pagamento confirmado e pedido gerado!")),
+        const SnackBar(content: Text("Pagamento confirmado e pedido gerado!"), backgroundColor: Colors.green,),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Erro ao salvar pedido!")),
+        const SnackBar(content: Text("❌ Erro ao salvar pedido!"), backgroundColor: Colors.red,),
       );
     }
   }
@@ -494,7 +494,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     // Lista de endereços cadastrados
                     if (userAddresses.isEmpty)
                       Text(
-                        "Nenhum endereço cadastrado",
+                        "⚠️ Nenhum endereço cadastrado",
                         style: TextStyle(color: Colors.grey[700], fontStyle: FontStyle.italic),
                       )
                     else
@@ -570,7 +570,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Cupom '${cupom['codigo']}' aplicado!")));
                       } else {
                         setState(() => discount = 0);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Cupom inválido ou expirado")));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("⚠️ Cupom inválido ou expirado")));
                       }
                     },
                     child: const Text("Aplicar"),
@@ -655,19 +655,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
     String name = cardNameController.text.trim();
 
     if (number.length != 16 || int.tryParse(number) == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Número do cartão inválido")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("⚠️ Número do cartão inválido")));
       return false;
     }
     if (!RegExp(r'^\d{2}/\d{2}$').hasMatch(expiry)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Validade inválida (MM/AA)")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("⚠️ Validade inválida (MM/AA)")));
       return false;
     }
     if (cvv.length != 3 || int.tryParse(cvv) == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("CVV inválido")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("⚠️ CVV inválido")));
       return false;
     }
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Nome no cartão é obrigatório")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("⚠️ Nome no cartão é obrigatório")));
       return false;
     }
     return true;
@@ -772,7 +772,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: pixKey));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Chave Pix copiada!")),
+                    const SnackBar(content: Text("✅ Chave Pix copiada!")),
                   );
                 },
               ),

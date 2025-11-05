@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../core/routes.dart';
 import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 
 String get baseUrl => GlobalConfig.GlobalConfig.api();
+
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
@@ -38,21 +41,55 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
+  // Função para converter dd/MM/yyyy para yyyy-MM-dd
+  String? _convertDateToMySQL(String dateStr) {
+    try {
+      // Remove espaços extras
+      dateStr = dateStr.trim();
+      
+      // Tenta fazer o parse no formato brasileiro
+      final DateFormat brFormat = DateFormat('dd/MM/yyyy');
+      final DateTime date = brFormat.parseStrict(dateStr);
+      
+      // Converte para formato MySQL
+      final DateFormat mysqlFormat = DateFormat('yyyy-MM-dd');
+      return mysqlFormat.format(date);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Função para remover formatação
+  String _cleanText(String text) {
+    return text.replaceAll(RegExp(r'\D'), '');
+  }
+
   void _submit() async {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _loading = true);
 
-    final url = Uri.parse('${baseUrl}/cadastro_usuario'); // IP do PC na rede
+    final url = Uri.parse('$baseUrl/cadastro_usuario');
+    
+    // Converte a data para o formato MySQL
+    final String? dataNascimentoMySQL = _convertDateToMySQL(_birthCtrl.text);
+    
+    if (dataNascimentoMySQL == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Data de nascimento inválida')),
+      );
+      setState(() => _loading = false);
+      return;
+    }
     
     final body = jsonEncode({
       'nome': _nameCtrl.text.trim(),
-      'telefone': _phoneCtrl.text.trim(),
+      'telefone': _cleanText(_phoneCtrl.text), // Remove a formatação
       'email': _emailCtrl.text.trim(),
       'senha': _passCtrl.text.trim(),
-      'data_nascimento': _birthCtrl.text.trim(),
-      'cpf': _cpfCtrl.text.trim(),
+      'data_nascimento': dataNascimentoMySQL, // Formato MySQL
+      'cpf': _cleanText(_cpfCtrl.text), // Remove a formatação
     });
 
     try {
@@ -64,17 +101,17 @@ class _SignupScreenState extends State<SignupScreen> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Conta criada com sucesso!')),
+          const SnackBar(content: Text('✅ Conta criada com sucesso!')),
         );
         Navigator.pushReplacementNamed(context, Routes.choose);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: ${response.body}')),
+          SnackBar(content: Text('❌ E-mail já cadastrado!')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro de conexão: $e')),
+        SnackBar(content: Text('❌ Erro de conexão: $e')),
       );
     } finally {
       setState(() => _loading = false);
@@ -130,12 +167,17 @@ class _SignupScreenState extends State<SignupScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Telefone',
                           prefixIcon: Icon(Icons.phone),
+                          hintText: '(XX) XXXXX-XXXX',
                         ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          _PhoneInputFormatter(),
+                        ],
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return 'Preencha seu telefone';
-                          if (!RegExp(r'^\d{10,11}$')
-                              .hasMatch(v.replaceAll(RegExp(r'\D'), ''))) {
-                            return 'Telefone inválido';
+                          final cleanPhone = _cleanText(v);
+                          if (!RegExp(r'^\d{10,11}$').hasMatch(cleanPhone)) {
+                            return '❌ Telefone inválido';
                           }
                           return null;
                         },
@@ -145,30 +187,55 @@ class _SignupScreenState extends State<SignupScreen> {
                       // Data de nascimento
                       TextFormField(
                         controller: _birthCtrl,
-                        keyboardType: TextInputType.datetime,
+                        keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
-                          labelText: 'Data de nascimento (AAAA-MM-DD)',
+                          labelText: 'Data de nascimento',
                           prefixIcon: Icon(Icons.calendar_today),
+                          hintText: 'dd/mm/aaaa',
                         ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          _DateInputFormatter(),
+                        ],
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Preencha a data de nascimento';
-                          if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(v.trim())) return 'Formato inválido';
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Preencha a data de nascimento';
+                          }
+                          
+                          // Valida formato
+                          if (!RegExp(r'^\d{2}/\d{2}/\d{4}$').hasMatch(v)) {
+                            return 'Use o formato dd/mm/aaaa';
+                          }
+                          
+                          // Valida se é uma data válida
+                          if (_convertDateToMySQL(v) == null) {
+                            return '❌ Data inválida';
+                          }
+                          
                           return null;
                         },
                       ),
                       const SizedBox(height: 12),
 
-                      // CPF
+                      // CPF - MODIFICADO COM MÁSCARA
                       TextFormField(
                         controller: _cpfCtrl,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
                           labelText: 'CPF',
                           prefixIcon: Icon(Icons.credit_card),
+                          hintText: 'XXX.XXX.XXX-XX',
                         ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          _CpfInputFormatter(), // Formatter customizado para CPF
+                        ],
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return 'Preencha o CPF';
-                          if (!RegExp(r'^\d{11}$').hasMatch(v.trim())) return 'CPF inválido';
+                          final cleanCpf = _cleanText(v);
+                          if (!RegExp(r'^\d{11}$').hasMatch(cleanCpf)) {
+                            return '❌ CPF inválido';
+                          }
                           return null;
                         },
                       ),
@@ -184,7 +251,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return 'Preencha o email';
-                          if (!v.contains('@')) return 'Email inválido';
+                          if (!v.contains('@')) return '❌ Email inválido';
                           return null;
                         },
                       ),
@@ -225,7 +292,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         validator: (v) {
                           if (v == null || v.isEmpty) return 'Confirme a senha';
-                          if (v != _passCtrl.text) return 'Senhas não conferem';
+                          if (v != _passCtrl.text) return '❌ Senhas não conferem';
                           return null;
                         },
                       ),
@@ -268,6 +335,116 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// Formatter para telefone (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+class _PhoneInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    
+    if (text.length > 11) {
+      return oldValue;
+    }
+
+    String formatted = '';
+    
+    for (int i = 0; i < text.length; i++) {
+      // Adiciona parênteses no DDD
+      if (i == 0) {
+        formatted += '(';
+      }
+      
+      formatted += text[i];
+      
+      // Fecha parênteses após DDD
+      if (i == 1) {
+        formatted += ') ';
+      }
+      
+      // Adiciona hífen na posição correta
+      // Para celular (11 dígitos): (XX) XXXXX-XXXX - hífen após o 7º dígito
+      // Para fixo (10 dígitos): (XX) XXXX-XXXX - hífen após o 6º dígito
+      if (text.length >= 11 && i == 6) {
+        formatted += '-';
+      } else if (text.length == 10 && i == 5) {
+        formatted += '-';
+      }
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+// Formatter para CPF XXX.XXX.XXX-XX
+class _CpfInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    
+    // Limita a 11 dígitos
+    if (text.length > 11) {
+      return oldValue;
+    }
+
+    String formatted = '';
+    
+    for (int i = 0; i < text.length; i++) {
+      formatted += text[i];
+      
+      // Adiciona pontos após 3º e 6º dígitos
+      if (i == 2 || i == 5) {
+        formatted += '.';
+      }
+      
+      // Adiciona hífen após 9º dígito
+      if (i == 8) {
+        formatted += '-';
+      }
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
+// Formatter customizado para formatar automaticamente dd/mm/aaaa
+class _DateInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final text = newValue.text;
+    
+    if (text.length > 10) {
+      return oldValue;
+    }
+
+    String formatted = '';
+    for (int i = 0; i < text.length; i++) {
+      formatted += text[i];
+      if (i == 1 || i == 3) {
+        formatted += '/';
+      }
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

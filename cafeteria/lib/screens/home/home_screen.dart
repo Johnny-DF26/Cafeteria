@@ -22,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _recommendController = ScrollController();
   bool _isLoading = true;
 
+
   String selectedCategory = "Todos";
 
   List<Map<String, dynamic>> promoItems = [];
@@ -41,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final userData = userProvider.userData;
+      print('Login com sucesso no Home: ${userData}');
       final userId = userData?['id'];
       if (userId != null) {
         fetchUserFavorites(userId);
@@ -102,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     } catch (e) {
-      print("Erro ao carregar favoritos: $e");
+      print("⚠️ Erro ao carregar favoritos: $e");
     }
   }
 
@@ -116,11 +118,11 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       if (response.statusCode == 201) {
         fetchUserFavorites(userId);
-        messenger.showSnackBar(SnackBar(content: Text("Produto adicionado aos favoritos!")));
+        messenger.showSnackBar(SnackBar(content: Text("✅ Produto adicionado aos favoritos!")));
       }
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text("Erro ao adicionar favorito!")));
-      print("Erro ao adicionar favorito: $e");
+      messenger.showSnackBar(SnackBar(content: Text("❌ Erro ao adicionar favorito!")));
+      //print("Erro ao adicionar favorito: $e");
     }
   }
 
@@ -136,13 +138,13 @@ class _HomeScreenState extends State<HomeScreen> {
             await http.delete(Uri.parse("$baseUrl/favoritos/${fav['idFavoritos']}"));
         if (response.statusCode == 200) {
           fetchUserFavorites(userId);
-          messenger.showSnackBar(SnackBar(content: Text("Produto removido dos favoritos!")));
+          messenger.showSnackBar(SnackBar(content: Text("✅ Produto removido dos favoritos!")));
         } else {
-          print("Erro ao remover favorito");
+          //print("Erro ao remover favorito");
         }
       }
     } catch (e) {
-      print("Erro ao remover favorito: $e");
+      //print("Erro ao remover favorito: $e");
     }
   }
 
@@ -163,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     } catch (e) {
-      print("Erro ao carregar produtos: $e");
+      print("⚠️ Erro ao carregar produtos: $e");
     }
   }
 
@@ -492,15 +494,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
                                             if (userId == null || item['idProdutos'] == null) {
                                               messenger.showSnackBar(
-                                                const SnackBar(content: Text("Erro: usuário ou produto inválido")),
+                                                const SnackBar(content: Text("❌ Erro: usuário ou produto inválido")),
                                               );
                                               return;
                                             }
 
                                             final produtoId = item['idProdutos'];
                                             try {
-                                              final response = await http.post(
-                                                Uri.parse("$baseUrl/add_carrinho"),
+                                              final response = await http.post(Uri.parse("$baseUrl/add_carrinho"),
                                                 headers: {"Content-Type": "application/json"},
                                                 body: json.encode({
                                                   "usuario_id": userId,
@@ -527,18 +528,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   }
                                                 });
                                                 messenger.showSnackBar(
-                                                  SnackBar(content: Text("${item['nome']} adicionado ao carrinho!")),
+                                                  SnackBar(content: Text("✅ ${item['nome']} adicionado ao carrinho!")),
                                                 );
                                               } else {
                                                 messenger.showSnackBar(
-                                                  const SnackBar(content: Text("Erro ao adicionar no carrinho")),
+                                                  const SnackBar(content: Text("❌ Erro ao adicionar no carrinho")),
                                                 );
                                               }
                                             } catch (e) {
-                                              print("Erro ao adicionar no carrinho: $e");
+                                              print("⚠️ Erro ao adicionar no carrinho: $e");
                                               if (!mounted) return;
                                               messenger.showSnackBar(
-                                                const SnackBar(content: Text("Erro de conexão")),
+                                                const SnackBar(content: Text("⚠️ Erro de conexão")),
                                               );
                                             }
                                           },
@@ -869,7 +870,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           final produtoId = item['idProdutos'];
                           if (userId == -1 || produtoId == null) {
                             messenger.showSnackBar(
-                              const SnackBar(content: Text("Erro: usuário ou produto inválido")),
+                              const SnackBar(content: Text("⚠️ Erro: usuário ou produto inválido")),
                             );
                             return;
                           }
@@ -900,15 +901,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                 }
                               });
                               messenger.showSnackBar(
-                                SnackBar(content: Text("${item['nome']} adicionado ao carrinho!")),
+                                SnackBar(content: Text("✅ ${item['nome']} adicionado ao carrinho!")),
                               );
                             } else {
                               messenger.showSnackBar(
-                                const SnackBar(content: Text("Erro ao adicionar no carrinho")),
+                                const SnackBar(content: Text("❌ Erro ao adicionar no carrinho")),
                               );
                             }
                           } catch (e) {
-                            print("Erro ao adicionar no carrinho: $e");
+                            print("⚠️ Erro ao adicionar no carrinho: $e");
                             if (!mounted) return;
                             messenger.showSnackBar(
                               const SnackBar(content: Text("Erro de conexão")),

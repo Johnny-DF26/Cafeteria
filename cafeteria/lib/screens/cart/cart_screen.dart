@@ -55,10 +55,10 @@ class _CartScreenState extends State<CartScreen> {
         });
 
       } else {
-        print("Erro ao buscar carrinho: ${response.statusCode}");
+        print("⚠️ Erro ao buscar carrinho: ${response.statusCode}");
       }
     } catch (e) {
-      print("Erro ao buscar carrinho: $e");
+      print("⚠️ Erro ao buscar carrinho: $e");
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -81,10 +81,10 @@ class _CartScreenState extends State<CartScreen> {
     if (response.statusCode == 200) {
       //print("Quantidade atualizada com sucesso");
     } else {
-      print("Erro ao atualizar quantidade: ${response.statusCode}");
+      print("⚠️ Erro ao atualizar quantidade: ${response.statusCode}");
     }
   } catch (e) {
-    print("Erro ao atualizar quantidade: $e");
+    print("⚠️ Erro ao atualizar quantidade: $e");
   }
 }
 
@@ -99,10 +99,10 @@ class _CartScreenState extends State<CartScreen> {
           cartItems.removeWhere((item) => item['idCarrinho_Produtos'] == cartProdId);
         });
       } else {
-        print("Erro ao remover item do carrinho: ${response.statusCode}");
+        print("⚠️ Erro ao remover item do carrinho: ${response.statusCode}");
       }
     } catch (e) {
-      print("Erro ao remover item do carrinho: $e");
+      print("⚠️ Erro ao remover item do carrinho: $e");
     }
   }
 
@@ -119,15 +119,19 @@ class _CartScreenState extends State<CartScreen> {
     );
 
     if (response.statusCode == 200) {
-      print("Produto removido do carrinho com sucesso");
-
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('✅ Produto removido do carrinho com sucesso'))
+      );
       final userId = Provider.of<UserProvider>(context, listen: false).userData?['id'];
       await fetchCartItems(userId); 
     } else {
-      print("Erro ao remover produto: ${response.statusCode}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('⚠️ Erro ao remover produto'))
+      );
+      print("⚠️ Erro ao remover produto: ${response.statusCode}");
     }
   } catch (e) {
-    print("Erro ao remover produto: $e");
+    print("⚠️ Erro ao remover produto: $e");
   }
 }
 
@@ -294,7 +298,7 @@ class _CartScreenState extends State<CartScreen> {
                     onPressed: () {
                       if (cartItems.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Carrinho vazio! Adicione itens antes de prosseguir."),
+                          const SnackBar(content: Text("⚠️ Carrinho vazio! Adicione itens antes de prosseguir."),
                           backgroundColor: Colors.redAccent, 
                           duration: Duration(seconds: 2)));
                       } else {

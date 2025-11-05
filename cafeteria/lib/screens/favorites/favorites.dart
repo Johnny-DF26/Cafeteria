@@ -55,10 +55,10 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
               }).toList();
         });
       } else {
-        print("Erro ao buscar favoritos: ${response.statusCode}");
+        print("⚠️ Erro ao buscar favoritos: ${response.statusCode}");
       }
     } catch (e) {
-      print("Erro ao buscar favoritos: $e");
+      print("⚠️ Erro ao buscar favoritos: $e");
     } finally {
       setState(() {
         isLoading = false;
@@ -76,7 +76,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
         });
       }
     } catch (e) {
-      print("Erro ao remover favorito: $e");
+      print("⚠️ Erro ao remover favorito: $e");
     }
   }
 
@@ -110,16 +110,16 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("${item['nome']} adicionado ao carrinho!")),
+          SnackBar(content: Text("✅ ${item['nome']} adicionado ao carrinho!")),
         );
       } else {
         print("Erro ao adicionar no carrinho: ${response.statusCode} - ${response.body}");
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Erro ao adicionar no carrinho")),
+          const SnackBar(content: Text("❌ Erro ao adicionar no carrinho")),
         );
       }
     } catch (e) {
-      print("Erro ao adicionar no carrinho: $e");
+      print("⚠️ Erro ao adicionar no carrinho: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Erro ao adicionar no carrinho")),
       );
