@@ -47,16 +47,19 @@ Endpoints úteis (exemplos)
 Configuração rápida — frontend (Flutter)
 1. Abra a pasta `cafeteria/`.
 2. Ajuste o endereço da API:
-   2.1- Localmente: cafeteria/lib/screens/main.dart --> L30 -- GlobalConfig.GlobalConfig.useOnline = false;
-   2.2- Hospedado no Railway: cafeteria/lib/screens/main.dart --> L30 -- GlobalConfig.GlobalConfig.useOnline = true;
-   2.3- Mudar o local do banco de dados: API/db.py --> get_connect() para local ou para railway
-   2.4- Local onde estão os IPs: cafeteria/lib/screens/config.dart 
+   - Localmente: cafeteria/lib/screens/main.dart --> L30 -- GlobalConfig.GlobalConfig.useOnline = false;
+   - Hospedado no Railway: cafeteria/lib/screens/main.dart --> L30 -- GlobalConfig.GlobalConfig.useOnline = true;
+   - Mudar o local do banco de dados: API/db.py --> get_connect() para local ou para railway
+   - Local onde estão os IPs: cafeteria/lib/screens/config.dart 
 4. Instale dependências:
    flutter pub get
 5. Rodar app:
    - Mobile/emulador: flutter run
    - Web: flutter run -d chrome
    - Linux/Desktop: flutter run -d linux
+6. APK:
+   - Para baixar e rodar no android
+      - Cafeteria/apk
 
 Observações importantes
 - O frontend usa um IP fixo em vários arquivos — ajuste para o IP da máquina que roda a API ou use um nome DNS local. Verifique [cafeteria/lib/services/auth_service.dart](cafeteria/lib/services/auth_service.dart) e referências a `$baseUrl`.
