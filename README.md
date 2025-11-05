@@ -33,7 +33,8 @@ Configuração rápida — backend (API)
 3. Inicializar banco usando os scripts em [Banco de dados - MySql/Modelo_Fisico.txt](Banco de dados - MySql/Modelo_Fisico.txt) (ou seu dump).
 4. Rodar API:
    python API/app.py
-   - A API roda por padrão em 0.0.0.0:5000 (veja final de [API/app.py](API/app.py)).
+   - A API roda por padrão em 0.0.0.0:5000 (veja final de [API/app.py](API/app.py)). Roda API localmente
+   - API roda por padrão em 0.0.0.0:8080 no Railway
 
 Endpoints úteis (exemplos)
 - POST /login → função [`login`](API/app.py)
@@ -45,10 +46,14 @@ Endpoints úteis (exemplos)
 
 Configuração rápida — frontend (Flutter)
 1. Abra a pasta `cafeteria/`.
-2. Ajuste o endereço da API em [cafeteria/lib/services/auth_service.dart](cafeteria/lib/services/auth_service.dart) e, se necessário, nos arquivos que referenciam `baseUrl` (ex.: telas de pagamento, pedidos, home).
-3. Instale dependências:
+2. Ajuste o endereço da API:
+   2.1- Localmente: cafeteria/lib/screens/main.dart --> L30 -- GlobalConfig.GlobalConfig.useOnline = false;
+   2.2- Hospedado no Railway: cafeteria/lib/screens/main.dart --> L30 -- GlobalConfig.GlobalConfig.useOnline = true;
+   2.3- Mudar o local do banco de dados: API/db.py --> get_connect() para local ou para railway
+   2.4- Local onde estão os IPs: cafeteria/lib/screens/config.dart 
+4. Instale dependências:
    flutter pub get
-4. Rodar app:
+5. Rodar app:
    - Mobile/emulador: flutter run
    - Web: flutter run -d chrome
    - Linux/Desktop: flutter run -d linux
