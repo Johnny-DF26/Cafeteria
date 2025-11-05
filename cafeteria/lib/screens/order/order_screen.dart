@@ -65,7 +65,7 @@ class _OrderScreenState extends State<OrderScreen> {
       //print(data);
       return data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
     } else {
-      throw Exception('Erro ao carregar pedidos');
+      throw Exception('⚠️ Erro ao carregar pedidos');
     }
   }
 
@@ -98,114 +98,129 @@ class _OrderScreenState extends State<OrderScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _ordersFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Erro: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("Nenhum pedido encontrado"));
-          }
-
-          final orders = snapshot.data!;
-        
-          //print(orders);
-
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: List.generate(orders.length, (index) {
-                  final order = orders[orders.length - 1 - index];
-                  // Data segura
-                  final dateStr = order['data_status']; // "Tue, 28 Oct 2025 00:31:54 GMT
-                  DateTime orderDate;
-                  try {
-                    orderDate = HttpDate.parse(dateStr); // já entende RFC 1123
-                  } catch (_) {
-                    orderDate = DateTime.now(); // fallback
-                  }
-                  final formattedDate = DateFormat('dd/MM/yyyy HH:mm').format(orderDate);
-          
-
-                  // Status
-                  String status = order['status'] ?? "realizado";
-                  // Cardo com as informações
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 5,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Pedido #${orders.length - index}",
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                          ),
-
-                          const SizedBox(height: 4),
-                          const Divider(thickness: 2, color: Colors.brown),
-                          ...order['items'].map<Widget>((item) => Text(
-                              "${item['quantidade']}x ${item['nome']} - R\$ ${item['preco_unitario'].toStringAsFixed(2).replaceAll('.', ',')}")),
-                          const SizedBox(height: 6),
-                          CustomPaint(
-                            painter: DashedLinePainter(),
-                            child: const SizedBox(height: 1, width: double.infinity),
-                          ),
-                          const SizedBox(height: 6),
-                          Text("Pagamento: ${order['tipo_pagamento'] ?? 'Não informado'}"),
-
-                          Text("Data/Hora: $formattedDate"),
-                          if (order['valor_frete'] != null && order['valor_frete'] > 0)
-                            Text(
-                              "Frete: R\$ ${order['valor_frete'].toStringAsFixed(2).replaceAll('.', ',')}",
-                            ),
-                          if (order['valor_desconto'] != null && order['valor_desconto'] > 0)
-                            Text(
-                              "Desconto: - R\$ ${order['valor_desconto'].toStringAsFixed(2).replaceAll('.', ',')}",
-                              style: const TextStyle(color: Colors.green),
-                            ),
-                          Text(
-                              "Total: R\$ ${order['valor_total'].toStringAsFixed(2).replaceAll('.', ',')}",
-                              style: const TextStyle(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 6),
-                          CustomPaint(
-                            painter: SolidLinePainter(),
-                            child: const SizedBox(height: 2, width: double.infinity),
-                          ),
-                          const SizedBox(height: 6),
-                          if (order['endereco'] != null)
-                            Text("Entrega: ${order['endereco']}"),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              const Text(
-                                "Status: ",
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                              ),
-                              Text(
-                                status,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: _statusColor(status),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Título "Pedidos"
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Pedidos',
+              style: GoogleFonts.roboto(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.brown.shade800,
               ),
             ),
-          );
-        },
+          ),
+          // Lista de pedidos
+          Expanded(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _ordersFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('⚠️ Erro: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text("Nenhum pedido encontrado"));
+                }
+
+                final orders = snapshot.data!;
+
+                return SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Column(
+                      children: List.generate(orders.length, (index) {
+                        final order = orders[orders.length - 1 - index];
+                        // Data segura
+                        final dateStr = order['data_status']; // "Tue, 28 Oct 2025 00:31:54 GMT
+                        DateTime orderDate;
+                        try {
+                          orderDate = HttpDate.parse(dateStr); // já entende RFC 1123
+                        } catch (_) {
+                          orderDate = DateTime.now(); // fallback
+                        }
+                        final formattedDate = DateFormat('dd/MM/yyyy HH:mm').format(orderDate);
+
+                        // Status
+                        String status = order['status'] ?? "realizado";
+                        // Cardo com as informações
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 5,
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Pedido #${orders.length - index}",
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                ),
+                                const SizedBox(height: 4),
+                                const Divider(thickness: 2, color: Colors.brown),
+                                ...order['items'].map<Widget>((item) => Text(
+                                    "${item['quantidade']}x ${item['nome']} - R\$ ${item['preco_unitario'].toStringAsFixed(2).replaceAll('.', ',')}")),
+                                const SizedBox(height: 6),
+                                CustomPaint(
+                                  painter: DashedLinePainter(),
+                                  child: const SizedBox(height: 1, width: double.infinity),
+                                ),
+                                const SizedBox(height: 6),
+                                Text("Pagamento: ${order['tipo_pagamento'] ?? 'Não informado'}"),
+                                Text("Data/Hora: $formattedDate"),
+                                if (order['valor_frete'] != null && order['valor_frete'] > 0)
+                                  Text(
+                                    "Frete: R\$ ${order['valor_frete'].toStringAsFixed(2).replaceAll('.', ',')}",
+                                  ),
+                                if (order['valor_desconto'] != null && order['valor_desconto'] > 0)
+                                  Text(
+                                    "Desconto: - R\$ ${order['valor_desconto'].toStringAsFixed(2).replaceAll('.', ',')}",
+                                    style: const TextStyle(color: Colors.green),
+                                  ),
+                                Text(
+                                    "Total: R\$ ${order['valor_total'].toStringAsFixed(2).replaceAll('.', ',')}",
+                                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 6),
+                                CustomPaint(
+                                  painter: SolidLinePainter(),
+                                  child: const SizedBox(height: 2, width: double.infinity),
+                                ),
+                                const SizedBox(height: 6),
+                                if (order['endereco'] != null)
+                                  Text("Entrega: ${order['endereco']}"),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    const Text(
+                                      "Status: ",
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    ),
+                                    Text(
+                                      status,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: _statusColor(status),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         selectedItemColor: Colors.brown.shade700,

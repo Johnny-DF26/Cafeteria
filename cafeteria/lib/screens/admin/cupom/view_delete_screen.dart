@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
-
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class ViewDeleteCouponScreen extends StatefulWidget {
-  final int adminId; // ID do administrador logado
+  final int adminId;
   const ViewDeleteCouponScreen({super.key, required this.adminId});
-
 
   @override
   State<ViewDeleteCouponScreen> createState() => _ViewDeleteCouponScreenState();
@@ -21,11 +20,9 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
   final TextEditingController codigoController = TextEditingController();
   String get baseUrl => GlobalConfig.GlobalConfig.api();
 
-
   @override
   void initState() {
     super.initState();
-    print('Tipo: ${baseUrl.runtimeType}, URL: ${baseUrl}');
     buscarCupons();
   }
 
@@ -77,9 +74,9 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
   // --------------------- ATUALIZAR CUPOM ---------------------
   Future<void> atualizarCupom(int id, Map<String, dynamic> dados) async {
     try {
-      // Formata a data
+      // Converte DD/MM/YYYY para YYYY-MM-DD
       if (dados['data_validade'] != null && dados['data_validade'].isNotEmpty) {
-        dados['data_validade'] = formatarData(dados['data_validade']);
+        dados['data_validade'] = formatarParaBanco(dados['data_validade']);
       }
 
       final response = await http.put(
@@ -108,9 +105,9 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
   // --------------------- ADICIONAR CUPOM ---------------------
   Future<void> adicionarCupom(Map<String, dynamic> dados) async {
     try {
-      // Formata a data
+      // Converte DD/MM/YYYY para YYYY-MM-DD
       if (dados['data_validade'] != null && dados['data_validade'].isNotEmpty) {
-        dados['data_validade'] = formatarData(dados['data_validade']);
+        dados['data_validade'] = formatarParaBanco(dados['data_validade']);
       }
 
       final response = await http.post(
@@ -120,30 +117,104 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
       );
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cupom adicionado com sucesso!')),
+          const SnackBar(content: Text('✅ Cupom adicionado com sucesso!')),
         );
         buscarCupons();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao adicionar cupom: ${response.body}')),
+          SnackBar(content: Text('❌ Erro ao adicionar cupom: ${response.body}')),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro de conexão: $e')),
+        SnackBar(content: Text('⚠️ Erro de conexão: $e')),
       );
     }
   }
 
-  // --------------------- FORMATA DATA ---------------------
-  String formatarData(String data) {
+  // --------------------- CONVERTE DD/MM/YYYY -> YYYY-MM-DD ---------------------
+  String formatarParaBanco(String data) {
     try {
-      DateTime dt = DateTime.parse(data);
-      return '${dt.year.toString().padLeft(4, '0')}-'
-             '${dt.month.toString().padLeft(2, '0')}-'
-             '${dt.day.toString().padLeft(2, '0')}';
+      if (data.contains('/')) {
+        final partes = data.split('/');
+        if (partes.length == 3) {
+          return '${partes[2]}-${partes[1]}-${partes[0]}';
+        }
+      }
+      return data;
     } catch (_) {
-      return data; // já está no formato correto
+      return data;
+    }
+  }
+
+  // --------------------- CONVERTE YYYY-MM-DD -> DD/MM/YYYY ---------------------
+  String formatarParaTela(dynamic data) {
+    try {
+      // Se for null ou vazio
+      if (data == null || data.toString().isEmpty) {
+        return '';
+      }
+
+      String dataStr = data.toString();
+
+      // Se já vier em DD/MM/YYYY, retorna
+      if (dataStr.contains('/') && !dataStr.contains('GMT')) {
+        return dataStr;
+      }
+
+      DateTime dt;
+
+      // Se vier do MySQL como GMT: "Mon, 29 Dec 2025 00:00:00 GMT"
+      if (dataStr.contains('GMT')) {
+        // Extrai apenas a parte da data: "29 Dec 2025"
+        final regex = RegExp(r'(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})');
+        final match = regex.firstMatch(dataStr);
+        
+        if (match != null) {
+          final dia = int.parse(match.group(1)!);
+          final mesStr = match.group(2)!;
+          final ano = int.parse(match.group(3)!);
+          
+          // Mapa de meses
+          final meses = {
+            'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 
+            'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 
+            'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+          };
+          
+          final mes = meses[mesStr] ?? 1;
+          dt = DateTime(ano, mes, dia);
+        } else {
+          return dataStr;
+        }
+      }
+      // Se vier no formato ISO: "2025-12-29T00:00:00.000Z"
+      else if (dataStr.contains('T') || dataStr.contains('Z')) {
+        dt = DateTime.parse(dataStr);
+      }
+      // Se vier no formato YYYY-MM-DD
+      else if (dataStr.contains('-')) {
+        final partes = dataStr.split('-');
+        if (partes.length == 3) {
+          // Remove qualquer hora se existir
+          final diaLimpo = partes[2].split(' ')[0].split('T')[0];
+          dt = DateTime(
+            int.parse(partes[0]),
+            int.parse(partes[1]),
+            int.parse(diaLimpo),
+          );
+        } else {
+          return dataStr;
+        }
+      } else {
+        return dataStr;
+      }
+
+      // Formata para DD/MM/YYYY
+      return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+    } catch (e) {
+      print('Erro ao formatar data: $e - Data original: $data');
+      return data.toString();
     }
   }
 
@@ -193,7 +264,9 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
                   onChanged: (value) => tipoDesconto = value!,
                 ),
                 const SizedBox(height: 12),
-                _buildTextField('Data de Validade (YYYY-MM-DD)', validadeControllerModal),
+                _buildTextField('Data de Validade', validadeControllerModal, 
+                  keyboardType: TextInputType.number,
+                  useMask: true),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
@@ -228,7 +301,9 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
     final codigoControllerModal = TextEditingController(text: cupom['codigo']);
     final descricaoControllerModal = TextEditingController(text: cupom['descricao']);
     final descontoControllerModal = TextEditingController(text: cupom['desconto'].toString());
-    final validadeControllerModal = TextEditingController(text: cupom['data_validade']);
+    final validadeControllerModal = TextEditingController(
+      text: formatarParaTela(cupom['data_validade'])
+    );
     String tipoDesconto = cupom['tipo_desconto'];
 
     showModalBottomSheet(
@@ -258,7 +333,9 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
                   onChanged: (value) => tipoDesconto = value!,
                 ),
                 const SizedBox(height: 12),
-                _buildTextField('Data de Validade (YYYY-MM-DD)', validadeControllerModal),
+                _buildTextField('Data de Validade', validadeControllerModal, 
+                  keyboardType: TextInputType.number,
+                  useMask: true),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
@@ -289,14 +366,21 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
 
   // --------------------- TEXTFIELD ---------------------
   Widget _buildTextField(String label, TextEditingController controller,
-      {TextInputType keyboardType = TextInputType.text}) {
+      {TextInputType keyboardType = TextInputType.text, bool useMask = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
+        inputFormatters: useMask ? [
+          MaskTextInputFormatter(
+            mask: '##/##/####',
+            filter: {"#": RegExp(r'[0-9]')},
+          )
+        ] : null,
         decoration: InputDecoration(
           labelText: label,
+          hintText: useMask ? 'DD/MM/AAAA' : null,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
@@ -389,7 +473,7 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
                                         Text('Código: ${cupom['codigo']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                                         Text('Descrição: ${cupom['descricao']}'),
                                         Text('Desconto: ${cupom['desconto']} ${cupom['tipo_desconto'] == 'percentual' ? '%' : 'R\$'}'),
-                                        Text('Validade: ${cupom['data_validade']}'),
+                                        Text('Validade: ${formatarParaTela(cupom['data_validade'])}'),
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.end,
                                           children: [

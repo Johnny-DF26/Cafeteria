@@ -97,14 +97,14 @@ class _OrderAdminScreenState extends State<OrderAdminScreen> {
 
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Status atualizado com sucesso!')),
+        const SnackBar(content: Text('✅ Status atualizado com sucesso!'), backgroundColor: Colors.green),
       );
       setState(() {
         _relatoriosFuture = fetchRelatorios();
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar status: ${response.body}')),
+        SnackBar(content: Text('⚠️ Erro ao atualizar status: ${response.body}')),
       );
     }
   }
@@ -173,6 +173,7 @@ class _OrderAdminScreenState extends State<OrderAdminScreen> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 248, 232, 225),
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.brown.shade700,
         centerTitle: true,
         title: Text(
@@ -190,9 +191,9 @@ class _OrderAdminScreenState extends State<OrderAdminScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('Erro: ${snapshot.error}'));
+            return Center(child: Text('⚠️ Erro: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("Nenhum relatório encontrado"));
+            return const Center(child: Text("⚠️ Nenhum relatório encontrado"));
           }
 
           final relatorios = snapshot.data!;
@@ -247,9 +248,9 @@ class _OrderAdminScreenState extends State<OrderAdminScreen> {
                               if (snapshotProdutos.connectionState == ConnectionState.waiting) {
                                 return const Text("Carregando produtos...");
                               } else if (snapshotProdutos.hasError) {
-                                return Text("Erro: ${snapshotProdutos.error}");
+                                return Text("⚠️ Erro: ${snapshotProdutos.error}");
                               } else if (!snapshotProdutos.hasData || snapshotProdutos.data!.isEmpty) {
-                                return const Text("Nenhum produto encontrado");
+                                return const Text("⚠️ Nenhum produto encontrado");
                               }
 
                               final produtos = snapshotProdutos.data!;

@@ -7,6 +7,7 @@ import 'package:cafeteria/screens/global/user_provider.dart';
 import '../../core/routes.dart';
 import 'package:cafeteria/screens/profile/adress.dart';
 import 'package:cafeteria/screens/profile/person.dart';
+import 'package:cafeteria/screens/profile/password.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -81,13 +82,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '-';
   }
 
+  String _formatPhone(String? phone) {
+    if (phone == null || phone.isEmpty || phone == '-') {
+      return '-';
+    }
+    
+    final digitsOnly = phone.replaceAll(RegExp(r'\D'), '');
+    
+    if (digitsOnly.length < 10) {
+      return phone;
+    }
+    
+    // Formatar: (DD) XXXXX-XXXX
+    final ddd = digitsOnly.substring(0, 2);
+    final firstPart = digitsOnly.substring(2, digitsOnly.length >= 7 ? 7 : digitsOnly.length);
+    final secondPart = digitsOnly.length > 7 ? digitsOnly.substring(7) : '';
+    
+    return secondPart.isNotEmpty ? '($ddd) $firstPart-$secondPart' : '($ddd) $firstPart';
+  }
+
   @override
   Widget build(BuildContext context) {
     final userData = Provider.of<UserProvider>(context).userData;
 
-    // debug rápido quando não há dados (apenas em debug)
     if (kDebugMode && (userData == null || userData.isEmpty)) {
-      // ignore: avoid_print
       print('ProfileScreen: userData vazio => $userData');
     }
 
@@ -95,7 +113,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final email = _pick(userData, ['email', 'email_usuario']);
     final img = _pick(userData, ['imagem', 'foto', 'avatar']);
     final cpf = _pick(userData, ['cpf', 'CPF', 'cpf_usuario']);
-    final telefone = _pick(userData, ['telefone', 'telefone_celular', 'celular', 'fone']);
+    final telefoneRaw = _pick(userData, ['telefone', 'telefone_celular', 'celular', 'fone']);
+    final telefone = _formatPhone(telefoneRaw);
     final dataNascRaw = _pick(userData, ['data_nascimento', 'dataNascimento', 'data_nasc']);
     final dataNasc = dataNascRaw == '-' ? '-' : _formatDate(dataNascRaw);
     final isWide = MediaQuery.of(context).size.width > 600;
@@ -137,7 +156,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 48,
-                      backgroundColor: Colors.grey.shade200,
+                      backgroundColor: const Color.fromARGB(255, 198, 183, 183),
                       backgroundImage: (img != '-' && img.isNotEmpty) ? NetworkImage(img) as ImageProvider : null,
                       child: (img == '-' || img.isEmpty) ? Text(name.isNotEmpty ? name[0].toUpperCase() : 'U', style: const TextStyle(fontSize: 28, color: Colors.brown)) : null,
                     ),
@@ -212,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _infoRow('Nome', nome),
           _infoRow('Email', email != '-' ? email : '-'),
           _infoRow('CPF', cpf != '-' ? cpf : '-'),
-          _infoRow('Telefone', telefone != '-' ? telefone : '-'),
+          _infoRow('Telefone', telefone),
           _infoRow('Data de Nascimento', dataNasc != '-' ? dataNasc : '-'),
           const SizedBox(height: 10),
           Align(
@@ -246,7 +265,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: const Text('Alterar senha'),
             subtitle: const Text('Atualize sua senha'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {},
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PasswordScreen())),
           ),
           const Divider(height: 1),
           ListTile(
@@ -276,6 +295,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Expanded(child: Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13))),
           Expanded(child: Text(value ?? '-', textAlign: TextAlign.right, style: const TextStyle(fontSize: 14))),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRowWithWidget(String label, Widget valueWidget) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(child: Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13))),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: valueWidget,
+            ),
+          ),
         ],
       ),
     );

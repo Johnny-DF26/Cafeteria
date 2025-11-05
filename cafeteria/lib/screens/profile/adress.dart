@@ -50,12 +50,12 @@ class _AddressScreenState extends State<AddressScreen> {
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao buscar endereços: ${response.statusCode}')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('⚠️ Erro ao buscar endereços: ${response.statusCode}')));
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro de conexão: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('⚠️ Erro de conexão: $e')));
       }
     } finally {
       if (mounted) setState(() => loading = false);
@@ -88,20 +88,20 @@ class _AddressScreenState extends State<AddressScreen> {
         await fetchAddresses();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Endereço salvo com sucesso'))
+            const SnackBar(content: Text('✅ Endereço salvo com sucesso'))
           );
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erro ao salvar: ${response.statusCode}'))
+            SnackBar(content: Text('❌ Erro ao salvar: ${response.statusCode}'))
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao conectar: $e'))
+          SnackBar(content: Text('⚠️Erro ao conectar: $e'))
         );
       }
     }
@@ -113,12 +113,12 @@ class _AddressScreenState extends State<AddressScreen> {
       final response = await http.delete(url).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         await fetchAddresses();
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Endereço removido')));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Endereço removido')));
       } else {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao deletar: ${response.statusCode}')));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Erro ao deletar: ${response.statusCode}')));
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erro ao conectar: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Erro ao conectar: $e')));
     }
   }
 
@@ -135,7 +135,7 @@ class _AddressScreenState extends State<AddressScreen> {
     
     // Verifica se não são todos números iguais (ex: 00000-000, 11111-111)
     if (RegExp(r'^(\d)\1{7}$').hasMatch(clean)) {
-      return 'CEP inválido';
+      return '❌ CEP inválido';
     }
     
     return null;
@@ -158,7 +158,7 @@ class _AddressScreenState extends State<AddressScreen> {
     ];
     
     if (!ufsValidas.contains(value.toUpperCase())) {
-      return 'UF inválida';
+      return '❌ UF inválida';
     }
     
     return null;
@@ -404,7 +404,7 @@ class _AddressScreenState extends State<AddressScreen> {
                     : addresses.isEmpty
                         ? const Padding(
                             padding: EdgeInsets.only(top: 32),
-                            child: Center(child: Text('Nenhum endereço cadastrado')),
+                            child: Center(child: Text('⚠️ Nenhum endereço cadastrado')),
                           )
                         : ListView.separated(
                             shrinkWrap: true,
