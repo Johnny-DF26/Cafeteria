@@ -99,7 +99,6 @@ class _PersonalScreenState extends State<PersonalScreen> {
     }
 
     final url = Uri.parse('$baseUrl/get_usuario/${user['id']}');
-    print(url);
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
