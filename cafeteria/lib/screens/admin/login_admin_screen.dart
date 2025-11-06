@@ -20,6 +20,12 @@ class _LoginAdminScreenState extends State<LoginAdminScreen> {
   bool _obscure = true;
   String? _errorMessage;
 
+  // AJUSTE AQUI: Mude este valor para ampliar/reduzir a imagem
+  // Valores menores = imagem menor
+  // Valores maiores = imagem maior
+  // Exemplo: 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, etc.
+  static const double imageScale = 1.17;
+
   @override
   void dispose() {
     _emailCtrl.dispose();
@@ -28,27 +34,33 @@ class _LoginAdminScreenState extends State<LoginAdminScreen> {
   }
 
   Future<void> _submit() async {
-  FocusScope.of(context).unfocus();
-  if (!_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() {
-    _loading = true;
-    _errorMessage = null;
-  });
+    setState(() {
+      _loading = true;
+      _errorMessage = null;
+    });
 
-  try {
-    final adminData = await _auth.signInAdmin(_emailCtrl.text.trim(),_passCtrl.text.trim()); // <--- captura o retorno do login
-    if (!mounted) return;
-    Navigator.pushReplacementNamed(context, Routes.admin, arguments: adminData, // agora passa os dados corretamente
-    );
-  } on AuthException catch (e) {
-    setState(() => _errorMessage = e.message);
-  } catch (_) {
-    setState(() => _errorMessage = 'Erro inesperado. Tente novamente.');
-  } finally {
-    if (mounted) setState(() => _loading = false);
+    try {
+      final adminData = await _auth.signInAdmin(
+        _emailCtrl.text.trim(),
+        _passCtrl.text.trim(),
+      );
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(
+        context,
+        Routes.admin,
+        arguments: adminData,
+      );
+    } on AuthException catch (e) {
+      setState(() => _errorMessage = e.message);
+    } catch (_) {
+      setState(() => _errorMessage = 'Erro inesperado. Tente novamente.');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -90,20 +102,34 @@ class _LoginAdminScreenState extends State<LoginAdminScreen> {
                         ),
                         const SizedBox(height: 10),
 
-                        // LOGO
-                        ClipOval(
-                          child: Image.asset(
-                            'assets/images/pngtree-coffee-logo-design-png-image_6352424.jpg',
-                            width: 180,
-                            height: 180,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              width: 120,
-                              height: 120,
-                              color: Colors.brown.shade100,
-                              alignment: Alignment.center,
-                              child: const Icon(Icons.coffee,
-                                  size: 80, color: Colors.brown),
+                        // LOGO com escala ajustável
+                        Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.red.shade200,
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: Center(
+                            child: Transform.scale(
+                              scale: imageScale,
+                              child: Image.asset(
+                                'assets/images/pngtree-coffee-logo-design-png-image_6352424.png',
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  Icons.admin_panel_settings_rounded,
+                                  size: 80,
+                                  color: Colors.red.shade600,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -115,7 +141,9 @@ class _LoginAdminScreenState extends State<LoginAdminScreen> {
                         ),
                         const SizedBox(height: 5),
                         const Text('Administrador',
-                            style: TextStyle(color: Colors.black54)),
+                            style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold)),
 
                         if (_errorMessage != null) ...[
                           const SizedBox(height: 12),
@@ -165,7 +193,8 @@ class _LoginAdminScreenState extends State<LoginAdminScreen> {
                           ),
                           obscureText: _obscure,
                           validator: (v) {
-                            if (v == null || v.isEmpty) return 'Preencha a senha';
+                            if (v == null || v.isEmpty)
+                              return 'Preencha a senha';
                             if (v.length < 6) {
                               return 'Senha mínima 6 caracteres';
                             }
@@ -199,36 +228,7 @@ class _LoginAdminScreenState extends State<LoginAdminScreen> {
                                         color: Colors.white),
                                   ),
                           ),
-                        ),/*
-                        const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            TextButton(
-                              onPressed: () => Navigator.pushNamed(
-                                  context, Routes.forgotPassword),
-                              child: const Text(
-                                'Esqueci a senha',
-                                style: TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 12),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () =>
-                                  Navigator.pushNamed(context, Routes.signup),
-                              child: const Text(
-                                'Cadastrar conta',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 12),
-                              ),
-
-                            ),
-                          ],
-                        ),*/
+                        ),
                       ],
                     ),
                   ),

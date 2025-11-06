@@ -9,6 +9,9 @@ class ChooseProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    
+    // ampliar/reduzir a logo
+    const double imageScale = 1.17;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -36,10 +39,10 @@ class ChooseProfileScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: ClipOval(
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        color: Colors.brown.shade50,
+                    clipBehavior: Clip.antiAlias,
+                    child: Center(
+                      child: Transform.scale(
+                        scale: imageScale,
                         child: Image.asset(
                           'assets/images/pngtree-coffee-logo-design-png-image_6352424.png',
                           fit: BoxFit.contain,

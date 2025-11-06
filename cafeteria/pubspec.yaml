@@ -31,8 +31,15 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: 5.0.0
+  flutter_launcher_icons: ^0.13.1
 
-  flutter_lints: ^6.0.0
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/pngtree-coffee-logo-design-png-image_6352424.png"
+  adaptive_icon_background: "#FFFFFF"  # Cor de fundo branca
+  adaptive_icon_foreground: "assets/images/pngtree-coffee-logo-design-png-image_6352424.png"
 
 flutter:
   uses-material-design: true

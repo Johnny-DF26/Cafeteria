@@ -21,6 +21,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscure = true;
   String? _errorMessage;
 
+  // AJUSTE AQUI: Mude este valor para ampliar/reduzir a imagem
+  // Valores menores = imagem menor
+  // Valores maiores = imagem maior
+  // Exemplo: 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, etc.
+  static const double imageScale = 1.17;
+
   @override
   void dispose() {
     _emailCtrl.dispose();
@@ -68,7 +74,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -109,20 +114,34 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 10),
 
-                        // LOGO
-                        ClipOval(
-                          child: Image.asset(
-                            'assets/images/pngtree-coffee-logo-design-png-image_6352424.jpg',
-                            width: 180,
-                            height: 180,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              width: 120,
-                              height: 120,
-                              color: Colors.brown.shade100,
-                              alignment: Alignment.center,
-                              child: const Icon(Icons.coffee,
-                                  size: 80, color: Colors.brown),
+                        // LOGO com escala ajustável
+                        Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.brown.shade200,
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: Center(
+                            child: Transform.scale(
+                              scale: imageScale,
+                              child: Image.asset(
+                                'assets/images/pngtree-coffee-logo-design-png-image_6352424.png',
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  Icons.coffee,
+                                  size: 80,
+                                  color: Colors.brown.shade600,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -164,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (v == null || v.trim().isEmpty) {
                               return 'Preencha o email';
                             }
-                            if (!v.contains('@')) return 'Email inválido'; // testando  || !v.contains('.com')
+                            if (!v.contains('@')) return 'Email inválido';
                             return null;
                           },
                         ),
