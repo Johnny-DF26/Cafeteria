@@ -355,7 +355,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         // Condiciona a escolher um pagamento
         if (selectedPayment == null) { // começa nulo
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("⚠️ Por favor, selecione uma forma de pagamento!")),
+            const SnackBar(content: Text("⚠️ Por favor, selecione uma forma de pagamento!"), backgroundColor: Colors.red,),
           );
           return; // impede continuar
         }
@@ -365,7 +365,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         //=====================================
         if (deliveryOption == null && deliveryOption != 'novo') { // começa nulo
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("⚠️ Por favor, selecione uma opção de entrega!")),
+            const SnackBar(content: Text("⚠️ Por favor, selecione uma opção de entrega!"), backgroundColor: Colors.red,),
           );
           return; // impede continuar
         }
@@ -377,7 +377,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         else if (deliveryOption == "cadastrado") {
           if (userAddresses.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("⚠️ Nenhum endereço cadastrado!")),
+              const SnackBar(content: Text("⚠️ Nenhum endereço cadastrado!"), backgroundColor: Colors.red,),
             );
             return; // Impede continuar
           }
@@ -388,7 +388,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         else if (deliveryOption == "novo") {
           if (newDeliveryAddressController.text.trim().isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Digite um novo endereço de entrega!")),
+              const SnackBar(content: Text("⚠️ Digite um novo endereço de entrega!"), backgroundColor: Colors.red,),
             );
             return;
           }
@@ -425,7 +425,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
       cartItems.clear();
       Navigator.pushNamedAndRemoveUntil(context, Routes.order, (_) => false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Pagamento confirmado e pedido gerado!"), backgroundColor: Colors.green,),
+        SnackBar(
+          content: Center(
+            child: Text(
+              "Pagamento confirmado e pedido gerado!",
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -16,9 +16,9 @@ class AuthService {
 // -------------------------
 // LOGIN USUÁRIO
 // -------------------------
-  Future<Map<String, dynamic>> signInWithEmail(String email, String senha) async {
+  Future<Map<String, dynamic>> signInWithEmail(String email, String password) async {
     final url = Uri.parse('$baseUrl/login');
-    final body = jsonEncode({'email': email, 'senha': senha});
+    final body = jsonEncode({'email': email, 'senha': password});
 
     final response = await http.post(
       url,
@@ -29,13 +29,14 @@ class AuthService {
     final data = jsonDecode(response.body);
     
     if (response.statusCode != 200){
-    throw AuthException(data['error'] ?? 'Erro desconhecido');
+      throw AuthException(data['error'] ?? 'Erro desconhecido');
     }
 
     return {
       'id': data['user']['idUsuario'],
       'nome': data['user']['nome'],
       'email': data['user']['email'],
+      'status': data['user']['status'],
       'cpf': data['user']['cpf'],
       'telefone': data['user']['telefone'],
       'endereco': data['user']['endereco'],
@@ -47,12 +48,12 @@ class AuthService {
 // --------------------------
 // LOGIN ADMINISTRADOR
 // -------------------------
-  Future<Map<String, dynamic>> signInAdmin(String email, String senha) async {
+  Future<Map<String, dynamic>> signInAdmin(String email, String password) async {
     final url = Uri.parse('$baseUrl/login_admin');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'senha': senha}),
+      body: jsonEncode({'email': email, 'senha': password}),
     );
 
     final data = jsonDecode(response.body);
@@ -63,7 +64,6 @@ class AuthService {
       throw AuthException(data['error'] ?? 'Falha no login do administrador');
     }
 
-    // retorna o map completo com id, nome e email
     return {
       'id': data['user']['idAdministrador'],
       'nome': data['user']['nome'],

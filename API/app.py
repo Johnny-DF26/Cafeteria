@@ -91,6 +91,7 @@ def login():
                     'telefone': user.get('telefone'),
                     'endereco': user.get('endereco'),
                     'dataNascimento': user.get('data_nascimento'),
+                    'status': user.get('ativo')  # ⚡ ADICIONE ESTA LINHA
                 }
             }), 200
 

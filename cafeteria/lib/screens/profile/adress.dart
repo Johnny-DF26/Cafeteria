@@ -88,13 +88,13 @@ class _AddressScreenState extends State<AddressScreen> {
         await fetchAddresses();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Endereço salvo com sucesso'))
+            const SnackBar(content: Text('✅ Endereço salvo com sucesso'), backgroundColor: Colors.green)
           );
         }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('❌ Erro ao salvar: ${response.statusCode}'))
+            SnackBar(content: Text('❌ Erro ao salvar: ${response.statusCode}'), backgroundColor: Colors.red)
           );
         }
       }
@@ -113,12 +113,12 @@ class _AddressScreenState extends State<AddressScreen> {
       final response = await http.delete(url).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         await fetchAddresses();
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Endereço removido')));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Endereço removido com sucesso!'), backgroundColor: Colors.green));
       } else {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Erro ao deletar: ${response.statusCode}')));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Erro ao deletar: ${response.statusCode}'), backgroundColor: Colors.red));
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Erro ao conectar: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Erro ao conectar: $e'), backgroundColor: Colors.red));
     }
   }
 

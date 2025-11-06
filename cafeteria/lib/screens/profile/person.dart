@@ -168,7 +168,7 @@ class _PersonalScreenState extends State<PersonalScreen> {
                 children: [
                   Icon(Icons.check_circle, color: Colors.white),
                   SizedBox(width: 12),
-                  Text('✅ Dados atualizados com sucesso!'),
+                  Text('Dados atualizados com sucesso!'),
                 ],
               ),
               backgroundColor: Colors.green,

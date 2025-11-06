@@ -38,18 +38,26 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      
       final userData = await _auth.signInWithEmail(
         _emailCtrl.text.trim(),
         _passCtrl.text.trim(),
       );
-      Provider.of<UserProvider>(context, listen: false).setUser(userData);
+
+      // ⚡ Verifica se o usuário está ativo (aceita diversos formatos)
+      final status = userData['status'];
+      final isActive = status == 1 || status == '1' || status == true || status == 'ativo' || status == 'Ativo';
+
+      if (!isActive) {
+        setState(() => _errorMessage = 'Sua conta está inativa. Entre em contato com o administrador.');
+        return;
+      }
 
       if (!mounted) return;
-      // ⚡ Adiciona o usuário no Provider
-      //Provider.of<UserProvider>(context, listen: false).setUser(userData);
+      
+      // Adiciona o usuário no Provider
+      Provider.of<UserProvider>(context, listen: false).setUser(userData);
 
-      // Navega para a Homer
+      // Navega para a Home
       Navigator.pushReplacementNamed(context, Routes.home);
     } on AuthException catch (e) {
       setState(() => _errorMessage = e.message);
