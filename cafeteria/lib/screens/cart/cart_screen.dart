@@ -546,7 +546,7 @@ class _CartScreenState extends State<CartScreen> {
                               children: const [
                                 Icon(Icons.warning, color: Colors.white),
                                 SizedBox(width: 8),
-                                Text("Carrinho vazio! Adicione itens antes de prosseguir."),
+                                Text("Carrinho vazio! Adicione itens para prosseguir."),
                               ],
                             ),
                             backgroundColor: Colors.orange.shade700,
@@ -633,11 +633,14 @@ class _CartScreenState extends State<CartScreen> {
         const SizedBox(height: 16),
         Row(
           children: [
-            Text(
-              "R\$ ${price.toStringAsFixed(2).replaceAll('.', ',')}",
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.grey.shade600,
+            Flexible(
+              child: Text(
+                "R\$ ${price.toStringAsFixed(2).replaceAll('.', ',')}",
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             Text(
@@ -663,58 +666,66 @@ class _CartScreenState extends State<CartScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove, size: 20),
-                    color: Colors.orange.shade700,
-                    onPressed: () {
-                      if (item["quantity"] > 1) {
-                        setState(() {
-                          item["quantity"]--;
-                        });
-                        updateCartItemQuantity(item['idCarrinho_Produtos'], item["quantity"]);
-                      } else {
-                        _showRemoveDialog(item);
-                      }
-                    },
-                    padding: const EdgeInsets.all(8),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      "${item["quantity"]}",
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.brown.shade900,
+            Flexible(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove, size: 20),
+                      color: Colors.orange.shade700,
+                      onPressed: () {
+                        if (item["quantity"] > 1) {
+                          setState(() {
+                            item["quantity"]--;
+                          });
+                          updateCartItemQuantity(item['idCarrinho_Produtos'], item["quantity"]);
+                        } else {
+                          _showRemoveDialog(item);
+                        }
+                      },
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        "${item["quantity"]}",
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.brown.shade900,
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add, size: 20),
-                    color: Colors.green.shade700,
-                    onPressed: () {
-                      setState(() {
-                        item["quantity"]++;
-                      });
-                      updateCartItemQuantity(item['idCarrinho_Produtos'], item["quantity"]);
-                    },
-                    padding: const EdgeInsets.all(8),
-                  ),
-                ],
+                    IconButton(
+                      icon: const Icon(Icons.add, size: 20),
+                      color: Colors.green.shade700,
+                      onPressed: () {
+                        setState(() {
+                          item["quantity"]++;
+                        });
+                        updateCartItemQuantity(item['idCarrinho_Produtos'], item["quantity"]);
+                      },
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             IconButton(
-              icon: Icon(Icons.delete_outline, color: Colors.red.shade600, size: 28),
+              icon: Icon(Icons.delete_outline, color: Colors.red.shade600, size: 26),
               onPressed: () => _showRemoveDialog(item),
               tooltip: "Remover item",
+              padding: const EdgeInsets.all(8),
+              constraints: const BoxConstraints(),
             ),
           ],
         ),

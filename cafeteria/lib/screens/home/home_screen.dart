@@ -371,11 +371,11 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: (index) async {
             if (index == 0) {
               await Navigator.pushNamed(context, Routes.favorites);
-            } else if (index == 1) {
+            } else if (index == 0) {
               // Já estamos na home
-            } else if (index == 2) {
+            } else if (index == 1) {
               Navigator.pushNamed(context, Routes.cart);
-            } else if (index == 3) {
+            } else if (index == 2) {
               Navigator.pushNamed(context, Routes.order);
             }
           },

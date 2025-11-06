@@ -78,7 +78,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Future<void> _decreaseItem(Map<String, dynamic> item) async {
   if (item['quantity'] <= 1) {
-    _removeItem(item);
+    // Se a quantidade for 1, chama a função de remoção com confirmação
+    await _removeItem(item);
     return;
   }
 
@@ -120,19 +121,153 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   // Remove produto do carrinho
   Future<void> _removeItem(Map<String, dynamic> item) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/remove_produto_carrinho'),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "carrinho_id": item['idCarrinho'],
-        "produto_id": item['idProduto'],
-      }),
+    // Mostra diálogo de confirmação
+    final shouldRemove = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Remover Produto',
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Deseja remover "${item['name']}" do carrinho?',
+            style: GoogleFonts.poppins(fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(
+                'Cancelar',
+                style: GoogleFonts.poppins(
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Remover',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
 
-    if (response.statusCode == 200) {
-      setState(() {
-        cartItems.remove(item);
-      });
+    // Se o usuário confirmou a remoção
+    if (shouldRemove == true) {
+      final response = await http.post(
+        Uri.parse('$baseUrl/remove_produto_carrinho'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "carrinho_id": item['idCarrinho'],
+          "produto_id": item['idProduto'],
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          cartItems.remove(item);
+        });
+
+        // Mostra mensagem de sucesso
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Produto removido com sucesso!',
+                    style: GoogleFonts.poppins(),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        // Verifica se o carrinho está vazio após a remoção
+        if (cartItems.isEmpty) {
+          // Aguarda um momento para mostrar o SnackBar antes de sair
+          await Future.delayed(const Duration(milliseconds: 500));
+          
+          if (mounted) {
+            // Volta para a tela de carrinho
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              Routes.cart,
+              (route) => false,
+            );
+            
+            // Mostra mensagem informando que o carrinho está vazio
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Seu carrinho está vazio. Adicione produtos para continuar!',
+                        style: GoogleFonts.poppins(),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: Colors.orange.shade700,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Erro ao remover produto',
+                    style: GoogleFonts.poppins(),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
     }
   }
 
@@ -470,6 +605,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                   IconButton(
                                     icon: const Icon(Icons.delete, color: Colors.red, size: 20),
                                     onPressed: () => _removeItem(item),
+                                    tooltip: 'Remover produto',
                                   ),
                                 ],
                               ),

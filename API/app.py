@@ -1356,8 +1356,6 @@ def adicionar_cartao():
     return jsonify({"mensagem": "Cartão adicionado", "id": card_id})
 
 
-
-
 # ==========================
 # 5. Confirmar Pagamento
 # ==========================
@@ -1487,8 +1485,6 @@ def atualizar_status(id_relatorio):
     conn.close()
 
     return jsonify({"mensagem": "Status atualizado com sucesso"}), 200
-
-// ...existing code...
 
 #=============================================================
 # Cancelar Pedido (atualiza status para cancelado) - Usuário
