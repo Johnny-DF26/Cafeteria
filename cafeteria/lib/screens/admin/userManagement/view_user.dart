@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:intl/intl.dart';
 import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
+import 'package:google_fonts/google_fonts.dart';
+import 'edit_user_screen.dart';
 
 String get baseUrl => GlobalConfig.GlobalConfig.api();
 class BuscarClienteScreen extends StatefulWidget {
@@ -58,17 +60,43 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
 
   Future<void> buscarCliente() async {
     if (!_cpfValido) return;
+    
     setState(() {
       _loading = true;
       _cliente = null;
       _mensagemCard = null;
     });
+
     try {
-      final response = await http
-          .get(Uri.parse('$baseUrl/cliente/${maskFormatter.getUnmaskedText()}'));
+      final cpfLimpo = maskFormatter.getUnmaskedText();
+      
+      debugPrint('=== BUSCAR CLIENTE ===');
+      debugPrint('CPF: $cpfLimpo');
+      debugPrint('URL: $baseUrl/cliente/$cpfLimpo');
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/cliente/$cpfLimpo'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      debugPrint('Status: ${response.statusCode}');
+      debugPrint('Body: ${response.body}');
+      debugPrint('======================');
+
       if (response.statusCode == 200) {
+        // ⚡ API agora retorna objeto direto, não dentro de 'cliente'
         final data = json.decode(response.body);
-        setState(() => _cliente = data['cliente']);
+        
+        debugPrint('Dados recebidos: $data');
+        debugPrint('idUsuario: ${data['idUsuario']}');
+        
+        // Verifica se tem idUsuario
+        if (data['idUsuario'] == null) {
+          setState(() => _mensagemCard = 'Erro: Cliente sem ID válido.');
+          return;
+        }
+        
+        setState(() => _cliente = data);
       } else if (response.statusCode == 404) {
         setState(() => _mensagemCard = 'Cliente não encontrado.');
       } else {
@@ -76,7 +104,8 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
         setState(() => _mensagemCard = data['error'] ?? 'Erro ao buscar cliente.');
       }
     } catch (e) {
-      setState(() => _mensagemCard = 'Erro de conexão.');
+      debugPrint('❌ Erro na busca: $e');
+      setState(() => _mensagemCard = 'Erro de conexão: $e');
     } finally {
       setState(() => _loading = false);
     }
@@ -137,11 +166,81 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
   String formatarData(String? dataStr) {
     if (dataStr == null || dataStr.isEmpty) return '';
     try {
-      final data = DateTime.parse(dataStr);
-      return DateFormat('dd/MM/yyyy').format(data);
-    } catch (_) {
+      // Fallback: extrai a data manualmente do formato GMT
+      if (dataStr.contains('GMT') || dataStr.contains(',')) {
+        // Extrai: "Wed, 07 Oct 1998 00:00:00 GMT"
+        final parts = dataStr.split(',')[1].trim().split(' ');
+        if (parts.length >= 3) {
+          final dia = int.parse(parts[0]);
+          final mes = _mesParaNumero(parts[1]);
+          final ano = int.parse(parts[2]);
+          
+          if (mes > 0) {
+            final data = DateTime(ano, mes, dia);
+            return DateFormat('dd/MM/yyyy').format(data);
+          }
+        }
+      }
+      
+      // Formato ISO: 2000-01-15T00:00:00.000Z
+      if (dataStr.contains('T')) {
+        final data = DateTime.parse(dataStr);
+        return DateFormat('dd/MM/yyyy').format(data);
+      }
+      
+      // Formato: 2000-01-15 ou 1998-10-07
+      if (dataStr.contains('-')) {
+        final data = DateTime.parse(dataStr);
+        return DateFormat('dd/MM/yyyy').format(data);
+      }
+      
+      // Formato: 15/01/2000
+      if (dataStr.contains('/')) {
+        final parts = dataStr.split('/');
+        if (parts.length == 3) {
+          final data = DateTime(
+            int.parse(parts[2]),
+            int.parse(parts[1]),
+            int.parse(parts[0]),
+          );
+          return DateFormat('dd/MM/yyyy').format(data);
+        }
+      }
+      
+      return dataStr;
+    } catch (e) {
+      debugPrint('Erro ao formatar data: $dataStr - $e');
       return dataStr;
     }
+  }
+
+  int _mesParaNumero(String mes) {
+    const meses = {
+      'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+      'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+    };
+    return meses[mes] ?? 0;
+  }
+
+  String formatarCPF(String? cpf) {
+    if (cpf == null || cpf.isEmpty) return '';
+    final numeros = cpf.replaceAll(RegExp(r'[^0-9]'), '');
+    if (numeros.length != 11) return cpf;
+    return '${numeros.substring(0, 3)}.${numeros.substring(3, 6)}.${numeros.substring(6, 9)}-${numeros.substring(9, 11)}';
+  }
+
+  String formatarTelefone(String? telefone) {
+    if (telefone == null || telefone.isEmpty) return '';
+    final numeros = telefone.replaceAll(RegExp(r'[^0-9]'), '');
+    
+    if (numeros.length == 11) {
+      // Celular: (11) 98765-4321
+      return '(${numeros.substring(0, 2)}) ${numeros.substring(2, 7)}-${numeros.substring(7)}';
+    } else if (numeros.length == 10) {
+      // Fixo: (11) 3456-7890
+      return '(${numeros.substring(0, 2)}) ${numeros.substring(2, 6)}-${numeros.substring(6)}';
+    }
+    return telefone;
   }
 
   @override
@@ -149,88 +248,150 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
     final width = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Buscar Cliente'),
-        backgroundColor: const Color.fromARGB(255, 228, 224, 223),
+        backgroundColor: Colors.brown.shade700,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          "Café Gourmet",
+          style: GoogleFonts.pacifico(
+            color: Colors.white,
+            fontSize: 30,
+          ),
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: width > 600 ? 480 : width),
-            child: Card(
-              elevation: 6,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Digite o CPF para buscar o cliente',
-                      style: TextStyle(fontSize: 16),
-                      textAlign: TextAlign.center,
+            child: Column(
+              children: [
+                // Título fora da AppBar
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Text(
+                    'Buscar Cliente',
+                    style: GoogleFonts.poppins(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.brown.shade900,
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _cpfCtrl,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [maskFormatter],
-                      decoration: const InputDecoration(
-                        labelText: 'CPF',
-                        prefixIcon: Icon(Icons.credit_card),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
+                  ),
+                ),
+                Card(
+                  elevation: 6,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            icon: const Icon(Icons.search),
-                            label: _loading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 2),
-                                  )
-                                : const Text('Buscar Cliente'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color.fromARGB(255, 234, 231, 230),
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 16),
+                        Text(
+                          'Digite o CPF para buscar o cliente',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            color: Colors.grey.shade700,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _cpfCtrl,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [maskFormatter],
+                          style: GoogleFonts.poppins(),
+                          decoration: InputDecoration(
+                            labelText: 'CPF',
+                            labelStyle: GoogleFonts.poppins(),
+                            prefixIcon: Icon(Icons.credit_card, color: Colors.brown.shade700),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            onPressed:
-                                (_loading || !_cpfValido) ? null : buscarCliente,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            icon: const Icon(Icons.clear),
-                            label: const Text('Limpar'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey[300],
-                              foregroundColor: Colors.black,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 16),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.search, size: 20),
+                                label: _loading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        'Buscar',
+                                        style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.brown.shade700,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 2,
+                                ),
+                                onPressed: (_loading || !_cpfValido) ? null : buscarCliente,
+                              ),
                             ),
-                            onPressed: _loading ? null : limparCampos,
-                          ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                icon: Icon(Icons.clear, size: 20, color: Colors.grey.shade700),
+                                label: Text(
+                                  'Limpar',
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  side: BorderSide(color: Colors.grey.shade400),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: _loading ? null : limparCampos,
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 16),
+                        if (_cliente != null || _mensagemCard != null)
+                          FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: _buildClienteCard(),
+                          ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    if (_cliente != null || _mensagemCard != null)
-                      FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: _buildClienteCard(),
-                      ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -241,12 +402,14 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
   Widget _buildClienteCard() {
     final ativo = _cliente != null && _cliente!['ativo'] == 1;
     final dataFormatada = formatarData(_cliente?['data_nascimento']);
+    final cpfFormatado = formatarCPF(_cliente?['cpf']);
+    final telefoneFormatado = formatarTelefone(_cliente?['telefone']);
 
     return Card(
-      color: ativo ? Colors.green[50] : Colors.red[50],
+      color: ativo ? Colors.green.shade50 : Colors.red.shade50,
       elevation: 4,
       margin: const EdgeInsets.only(top: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -257,55 +420,190 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
                 children: [
                   Expanded(
                     child: Text(
-                      'Nome: ${_cliente!['nome_completo']}',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                      _cliente!['nome_completo'] ?? 'Nome não disponível',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.brown.shade900,
+                      ),
                     ),
                   ),
                   Icon(
                     ativo ? Icons.check_circle : Icons.cancel,
                     color: ativo ? Colors.green : Colors.red,
-                    size: 20,
+                    size: 24,
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
-              Text('Email: ${_cliente!['email']}'),
-              Text('Telefone: ${_cliente!['telefone']}'),
-              Text('CPF: ${_cliente!['cpf']}'),
-              Text('Data de Nascimento: $dataFormatada'),
-              Text('Ativo: ${ativo ? 'Sim' : 'Não'}',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(141, 249, 84, 72),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+              const SizedBox(height: 12),
+              _buildInfoRow(Icons.email, 'Email', _cliente!['email'] ?? 'N/A'),
+              const SizedBox(height: 8),
+              _buildInfoRow(Icons.phone, 'Telefone', telefoneFormatado.isNotEmpty ? telefoneFormatado : 'N/A'),
+              const SizedBox(height: 8),
+              _buildInfoRow(Icons.credit_card, 'CPF', cpfFormatado.isNotEmpty ? cpfFormatado : 'N/A'),
+              const SizedBox(height: 8),
+              _buildInfoRow(Icons.cake, 'Data de Nascimento', dataFormatada.isNotEmpty ? dataFormatada : 'N/A'),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: ativo ? Colors.green.shade100 : Colors.red.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: ativo ? Colors.green.shade300 : Colors.red.shade300,
                   ),
-                  icon: const Icon(Icons.delete),
-                  label: const Text('Excluir Cliente'),
-                  onPressed: excluirCliente,
                 ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      ativo ? Icons.check_circle_outline : Icons.cancel_outlined,
+                      size: 18,
+                      color: ativo ? Colors.green.shade700 : Colors.red.shade700,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Status: ${ativo ? 'Ativo' : 'Inativo'}',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        color: ativo ? Colors.green.shade700 : Colors.red.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(color: Colors.brown.shade700, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        foregroundColor: Colors.brown.shade700,
+                      ),
+                      icon: const Icon(Icons.edit_rounded, size: 22),
+                      label: Text(
+                        'Editar',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditUserScreen(cliente: _cliente!),
+                          ),
+                        ).then((_) {
+                          // Atualiza os dados após editar
+                          if (_cpfCtrl.text.isNotEmpty) {
+                            buscarCliente();
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                      icon: const Icon(Icons.delete_forever_rounded, size: 22),
+                      label: Text(
+                        'Excluir',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      onPressed: excluirCliente,
+                    ),
+                  ),
+                ],
               ),
             ],
             if (_mensagemCard != null)
               Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Center(
-                  child: Text(
-                    _mensagemCard!,
-                    style: TextStyle(
-                      color: _cliente == null ? Colors.red : Colors.green[700],
-                      fontWeight: FontWeight.bold,
+                padding: const EdgeInsets.only(top: 12),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _cliente == null ? Colors.red.shade50 : Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: _cliente == null ? Colors.red.shade300 : Colors.green.shade300,
                     ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _cliente == null ? Icons.error_outline : Icons.check_circle_outline,
+                        color: _cliente == null ? Colors.red.shade700 : Colors.green.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _mensagemCard!,
+                          style: GoogleFonts.poppins(
+                            color: _cliente == null ? Colors.red.shade700 : Colors.green.shade700,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: Colors.brown.shade700),
+          const SizedBox(width: 10),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.grey.shade900,
+                ),
+                children: [
+                  TextSpan(
+                    text: '$label: ',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  TextSpan(text: value),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

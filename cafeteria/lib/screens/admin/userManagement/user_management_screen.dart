@@ -167,7 +167,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   ),
                   _buildTopicTile(
                     icon: Icons.visibility_rounded,
-                    label: 'Visualizar Usuários',
+                    label: 'Atualizar Usuários',
                     onTap: () {
                       Navigator.push(
                         context,
@@ -177,13 +177,6 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                       );
                     },
                   ),
-                  _buildTopicTile(
-                    icon: Icons.edit_rounded,
-                    label: 'Editar Usuário',
-                    onTap: () {},
-                  ),
-                  const SizedBox(height: 24),
-                  
                   // Card de estatísticas
                   Container(
                     padding: const EdgeInsets.all(24),

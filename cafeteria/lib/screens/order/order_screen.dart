@@ -117,6 +117,118 @@ class _OrderScreenState extends State<OrderScreen> {
     return Colors.grey;
   }
 
+  Future<void> _cancelOrder(int orderId) async {
+    try {
+      final url = Uri.parse('$baseUrl/cancelar_pedido/$orderId');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Pedido cancelado com sucesso!',
+                style: GoogleFonts.poppins(),
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Recarrega a lista de pedidos
+          final userProvider = Provider.of<UserProvider>(context, listen: false);
+          final userData = userProvider.userData;
+          if (userData != null && userData['id'] != null) {
+            setState(() {
+              _ordersFuture = fetchOrders(userData['id']);
+            });
+          }
+        }
+      } else {
+        throw Exception('Erro ao cancelar pedido');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Erro ao cancelar pedido: $e',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showCancelDialog(int orderId, String orderNumber) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 28),
+              const SizedBox(width: 12),
+              Text(
+                'Cancelar Pedido',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Tem certeza que deseja cancelar o $orderNumber?',
+            style: GoogleFonts.poppins(fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Não',
+                style: GoogleFonts.poppins(
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _cancelOrder(orderId);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Sim, Cancelar',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  bool _canCancelOrder(String status) {
+    return status.toLowerCase().contains('realizado');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -278,6 +390,8 @@ class _OrderScreenState extends State<OrderScreen> {
 
                       final formattedDate = DateFormat('dd/MM/yyyy HH:mm').format(orderDate);
                       final status = order['status'] ?? 'realizado';
+                      final orderId = order['idRelatorio_Pedido'] ?? (orders.length - index);
+                      final canCancel = _canCancelOrder(status);
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: 16),
@@ -472,6 +586,34 @@ class _OrderScreenState extends State<OrderScreen> {
                                       ),
                                     ),
                                   ],
+                                ),
+                              ],
+
+                              // Botão de cancelar
+                              if (canCancel) ...[
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => _showCancelDialog(orderId, "Pedido #$orderId"),
+                                    icon: const Icon(Icons.cancel, size: 20),
+                                    label: Text(
+                                      'Cancelar Pedido',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red.shade600,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      elevation: 2,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ],

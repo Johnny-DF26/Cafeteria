@@ -727,7 +727,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: IconButton(
-                icon: const Icon(Icons.favorite, color: Colors.red, size: 24),
+                icon: Icon(Icons.delete_sharp, color: Colors.red.shade700, size: 24),
                 onPressed: () => _showRemoveFavoriteDialog(item),
                 tooltip: "Remover dos favoritos",
               ),

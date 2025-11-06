@@ -401,7 +401,7 @@ def listar_usuarios():
 
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute("SELECT idUsuario, nome_completo, email, telefone, data_nascimento, cpf FROM usuario")
+        cursor.execute("SELECT idUsuario, nome_completo, email, telefone, data_nascimento, ativo, cpf FROM usuario")
         users = cursor.fetchall()
         return jsonify(users), 200
     except Exception as e:
@@ -413,19 +413,50 @@ def listar_usuarios():
 # ------------------------
 # Editar um usuário existente
 # ------------------------
-@app.route('/usuario/<int:id>', methods=['PUT'])
-def editar_usuario(id):
-    print(id)
+@app.route('/usuarios/<int:id>', methods=['PUT'])
+def editar_usuario_admin(id):
     data = request.get_json()
-    nome_completo = data.get('nome')
-    telefone = data.get('telefone')
+    
+    # Campos que podem ser atualizados
+    nome_completo = data.get('nome_completo')
     email = data.get('email')
-    senha = data.get('senha')
-    data_nascimento = data.get('data_nascimento')
+    telefone = data.get('telefone')
     cpf = data.get('cpf')
+    data_nascimento = data.get('data_nascimento')
+    ativo = data.get('ativo')
+    senha = data.get('senha')  # ⚡ Adicionar senha
 
-    if not all([nome_completo, telefone, email, senha, data_nascimento, cpf]):
-        return jsonify({'error': 'Todos os campos são obrigatórios'}), 400
+    # Monta UPDATE dinamicamente
+    campos = []
+    valores = []
+
+    if nome_completo is not None:
+        campos.append("nome_completo=%s")
+        valores.append(nome_completo)
+    if email is not None:
+        campos.append("email=%s")
+        valores.append(email)
+    if telefone is not None:
+        campos.append("telefone=%s")
+        valores.append(telefone)
+    if cpf is not None:
+        campos.append("cpf=%s")
+        valores.append(cpf)
+    if data_nascimento is not None:
+        campos.append("data_nascimento=%s")
+        valores.append(data_nascimento)
+    if ativo is not None:
+        campos.append("ativo=%s")
+        valores.append(ativo)
+    # ⚡ Adicionar senha apenas se fornecida e não vazia
+    if senha is not None and senha.strip() != '':
+        campos.append("senha=%s")
+        valores.append(senha)
+
+    if not campos:
+        return jsonify({'error': 'Nenhum campo para atualizar'}), 400
+
+    valores.append(id)
 
     conn = get_connection()
     if conn is None:
@@ -433,17 +464,17 @@ def editar_usuario(id):
 
     cursor = conn.cursor()
     try:
-        cursor.execute("""
-            UPDATE usuario SET
-                nome_completo=%s,
-                telefone=%s,
-                email=%s,
-                senha=%s,
-                data_nascimento=%s,
-                cpf=%s
+        cursor.execute(f"""
+            UPDATE usuario 
+            SET {', '.join(campos)}
             WHERE idUsuario=%s
-        """, (nome_completo, telefone, email, senha, data_nascimento, cpf, id))
+        """, tuple(valores))
+        
         conn.commit()
+        
+        if cursor.rowcount == 0:
+            return jsonify({'error': 'Usuário não encontrado'}), 404
+            
         return jsonify({'message': 'Usuário atualizado com sucesso!'}), 200
     except Exception as e:
         conn.rollback()
@@ -521,14 +552,35 @@ def buscar_cliente(cpf):
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
-        query = "SELECT nome_completo, email, senha, cpf, telefone, data_nascimento, ativo FROM usuario WHERE cpf=%s"
-        cursor.execute(query, (cpf,))
+        
+        # Remove formatação do CPF
+        cpf_limpo = cpf.replace('.', '').replace('-', '').strip()
+        
+        print(f"🔍 Buscando CPF: {cpf_limpo}")  # Debug
+        
+        # ⚡ INCLUIR idUsuario na query
+        query = """SELECT idUsuario, nome_completo, email, senha, cpf, telefone, 
+                   data_nascimento, ativo FROM usuario WHERE cpf=%s"""
+        cursor.execute(query, (cpf_limpo,))
         cliente = cursor.fetchone()
+        
         if cliente:
-            return jsonify({'cliente': cliente}), 200
+            print(f"✅ Cliente encontrado: {cliente}")  # Debug
+            
+            # Formatar data se for objeto date
+            if cliente.get('data_nascimento'):
+                data_nasc = cliente['data_nascimento']
+                if hasattr(data_nasc, 'strftime'):
+                    cliente['data_nascimento'] = data_nasc.strftime('%Y-%m-%d')
+            
+            # ⚡ Retornar objeto direto (sem envolver em 'cliente')
+            return jsonify(cliente), 200
         else:
+            print(f"❌ Cliente não encontrado")  # Debug
             return jsonify({'error': 'Cliente não encontrado'}), 404
-    except Error as e:
+            
+    except Exception as e:
+        print(f"❌ Erro na busca: {str(e)}")  # Debug
         return jsonify({'error': str(e)}), 500
     finally:
         if cursor:
@@ -1380,8 +1432,11 @@ def listar_pedidos_usuario(usuario_id):
     conn.close()
     return jsonify(pedidos)
 
-#=================================================================================================================================================================================
-# GET - Listar todos os relatórios de pedidos
+
+#=============================================================
+# GET - Listar todos os relatórios de pedidos - Administrador
+#===============================================
+
 @app.route('/relatorios_pedidos', methods=['GET'])
 def listar_relatorios():
     conn = get_connection()
@@ -1433,6 +1488,64 @@ def atualizar_status(id_relatorio):
 
     return jsonify({"mensagem": "Status atualizado com sucesso"}), 200
 
+// ...existing code...
+
+#=============================================================
+# Cancelar Pedido (atualiza status para cancelado) - Usuário
+#=============================================================
+@app.route('/cancelar_pedido/<int:pedido_id>', methods=['POST'])
+def cancelar_pedido(pedido_id):
+    try:
+        conn = get_connection()
+        if conn is None:
+            return jsonify({'error': 'Não foi possível conectar ao banco de dados'}), 500
+
+        cursor = conn.cursor(dictionary=True)
+
+        # 1️⃣ Verifica se o pedido existe e se está em status "Realizado"
+        cursor.execute("""
+            SELECT idRelatorio_Pedido, status 
+            FROM relatorio_pedido 
+            WHERE idRelatorio_Pedido = %s
+        """, (pedido_id,))
+        
+        pedido = cursor.fetchone()
+
+        if not pedido:
+            return jsonify({'error': 'Pedido não encontrado'}), 404
+
+        if pedido['status'].lower() != 'realizado':
+            return jsonify({'error': 'Apenas pedidos com status "Realizado" podem ser cancelados'}), 400
+
+        # 2️⃣ Atualiza o status para "Cancelado"
+        cursor.execute("""
+            UPDATE relatorio_pedido 
+            SET status = 'Cancelado', data_status = NOW()
+            WHERE idRelatorio_Pedido = %s
+        """, (pedido_id,))
+
+        conn.commit()
+
+        # 3️⃣ Verifica se foi atualizado
+        if cursor.rowcount == 0:
+            return jsonify({'error': 'Erro ao cancelar o pedido'}), 500
+
+        return jsonify({
+            'message': 'Pedido cancelado com sucesso!',
+            'pedido_id': pedido_id,
+            'novo_status': 'Cancelado'
+        }), 200
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return jsonify({'error': f'Erro ao cancelar pedido: {str(e)}'}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 #=====================================================================================================================================================================================
 #                                                                                    Rota IP 

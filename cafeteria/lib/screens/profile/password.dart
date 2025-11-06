@@ -145,7 +145,7 @@ class _PasswordScreen extends State<PasswordScreen> {
               title: Text(
                 'Café Gourmet',
                 style: GoogleFonts.pacifico(
-                  fontSize: 24,
+                  fontSize: 30,
                   color: Colors.white,
                   fontWeight: FontWeight.w400,
                 ),

@@ -265,14 +265,14 @@ class _HomeScreenState extends State<HomeScreen> {
               slivers: [
                 SliverAppBar(
                   pinned: true,
-                  expandedHeight: 120,
+                  expandedHeight: 110,
                   backgroundColor: Colors.brown.shade700,
                   centerTitle: true,
                   automaticallyImplyLeading: false,
                   title: Text(
                     'Café Gourmet',
                     style: GoogleFonts.pacifico(
-                      fontSize: 28,
+                      fontSize: 30,
                       color: Colors.white,
                     ),
                   ),
@@ -332,7 +332,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             userId: userId,
                             screenWidth: screenWidth,
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 2),
                         ],
                         _buildHorizontalScrollableSection(
                           title: "☕ Nossos Produtos",
@@ -475,12 +475,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         elevation: 12,
         shadowColor: Colors.brown.shade200,
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(50),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
