@@ -4,7 +4,7 @@ import 'package:flutter_masked_text2/flutter_masked_text2.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/routes.dart';
-import '../global/global.dart'; // importa global.dart
+import '../global/global.dart';
 import '../global/user_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -220,7 +220,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         // Condiciona a escolher um pagamento
         if (selectedPayment == null) { // começa nulo
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Por favor, selecione uma forma de pagamento!")),
+            const SnackBar(content: Text("⚠️ Por favor, selecione uma forma de pagamento!")),
           );
           return; // impede continuar
         }
@@ -230,7 +230,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         //=====================================
         if (deliveryOption == null && deliveryOption != 'novo') { // começa nulo
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Por favor, selecione uma opção de entrega!")),
+            const SnackBar(content: Text("⚠️ Por favor, selecione uma opção de entrega!")),
           );
           return; // impede continuar
         }
@@ -341,19 +341,35 @@ class _PaymentScreenState extends State<PaymentScreen> {
     double total = totalWithDiscount;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         backgroundColor: Colors.brown.shade700,
         centerTitle: true,
-        title: Text('Café Gourmet', style: GoogleFonts.pacifico(color: Colors.white, fontSize: 26)),
-        //leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
+        elevation: 0,
+        title: Text(
+          'Café Gourmet',
+          style: GoogleFonts.pacifico(
+            color: Colors.white,
+            fontSize: 30,
+            shadows: [
+              Shadow(
+                color: Colors.black26,
+                offset: const Offset(0, 2),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+        ),
         automaticallyImplyLeading: false,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
-            child: IconButton(icon: const Icon(Icons.settings, color: Colors.white), iconSize: 30, onPressed: () {
-              Navigator.pushNamed(context, Routes.profile);
-            }),
+            child: IconButton(
+              icon: const Icon(Icons.settings, color: Colors.white, size: 28),
+              onPressed: () {
+                Navigator.pushNamed(context, Routes.profile);
+              },
+            ),
           ),
         ],
       ),
@@ -363,287 +379,589 @@ class _PaymentScreenState extends State<PaymentScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              
-              // Resumo do pedido
-              Text("Resumo do pedido", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.brown.shade700)),
-              const SizedBox(height: 10),
-              ...cartItems.map((item) {
-                String priceStr = item['price'].toString().replaceAll('R\$ ', '').replaceAll(',', '.');
-                double price = double.tryParse(priceStr) ?? 0;
-                double totalItem = price * (item['quantity'] ?? 1);
+              // Título da seção
+              Text(
+                "Finalizar Pedido",
+                style: GoogleFonts.poppins(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.brown.shade900,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Revise seu pedido e escolha o pagamento",
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.brown.shade600,
+                ),
+              ),
+              const SizedBox(height: 24),
 
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  
-                  title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(
-                    "${item['quantity']} x R\$ ${double.parse(item['price'].toString().replaceAll('R\$ ', '').replaceAll(',', '.')).toStringAsFixed(2).replaceAll('.', ',')}",
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
+              // Card Resumo do pedido
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Diminuir quantidade
-                      IconButton(
-                        icon: const Icon(Icons.remove, color: Colors.orange),
-                        onPressed: () => _decreaseItem(item),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.brown.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.shopping_bag,
+                              color: Colors.brown.shade700,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            "Resumo do Pedido",
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.brown.shade900,
+                            ),
+                          ),
+                        ],
                       ),
-                      // Quantidade
-                      Text("${item['quantity']}", style: const TextStyle(fontWeight: FontWeight.bold)),
-                      // Aumentar quantidade
-                      IconButton(
-                        icon: const Icon(Icons.add, color: Colors.green),
-                        onPressed: () => _increaseItem(item),
-                      ),
-                      // Remover totalmente
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _removeItem(item),
-                      ),
-                      const SizedBox(width: 8),
-                      // Total do item
-                      Text("R\$ ${totalItem.toStringAsFixed(2).replaceAll('.', ',')}",
-                          style: TextStyle(color: Colors.brown.shade700, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 16),
+                      Divider(color: Colors.brown.shade200),
+                      const SizedBox(height: 8),
+                      ...cartItems.map((item) {
+                        String priceStr = item['price'].toString().replaceAll('R\$ ', '').replaceAll(',', '.');
+                        double price = double.tryParse(priceStr) ?? 0;
+                        double totalItem = price * (item['quantity'] ?? 1);
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade200),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item['name'],
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15,
+                                        color: Colors.brown.shade900,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                    onPressed: () => _removeItem(item),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.grey.shade300),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(Icons.remove, size: 16),
+                                              color: Colors.orange.shade700,
+                                              onPressed: () => _decreaseItem(item),
+                                              padding: const EdgeInsets.all(4),
+                                              constraints: const BoxConstraints(),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                                              child: Text(
+                                                "${item['quantity']}",
+                                                style: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(Icons.add, size: 16),
+                                              color: Colors.green.shade700,
+                                              onPressed: () => _increaseItem(item),
+                                              padding: const EdgeInsets.all(4),
+                                              constraints: const BoxConstraints(),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        "R\$ ${price.toStringAsFixed(2).replaceAll('.', ',')} cada",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    "R\$ ${totalItem.toStringAsFixed(2).replaceAll('.', ',')}",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.brown.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
                     ],
                   ),
-                );
-              }),
-              const Divider(thickness: 2, color:Color.fromARGB(255, 95, 66, 57)),
-              const SizedBox(height: 10),
-              
-              // ==========================
-              // Seção de entrega
-              // ==========================
-              Text(
-                "Endereço de entrega",
-                style: TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold, color: Colors.brown.shade700),
+                ),
               ),
-              const SizedBox(height: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Radios principais
-                  RadioListTile<String>(
-                    value: 'retirada',
-                    groupValue: deliveryOption,
-                    onChanged: (value) {
-                      setState(() {
-                        deliveryOption = value!;
-                        shippingFee = 0;
-                      });
-                    },
-                    activeColor: Colors.brown.shade700,
-                    title: const Text('Retirada no local'),
-                  ),
+              const SizedBox(height: 24),
 
-                  RadioListTile<String>(
-                    value: 'cadastrado',
-                    groupValue: deliveryOption,
-                    onChanged: (value) {
-                      setState(() {
-                        deliveryOption = value!;
-                        shippingFee = 4.0;
-                        if (userAddresses.isNotEmpty) {
-                          selectedAddressIndex = 0;
-                          var addr = userAddresses[0];
-                          deliveryAddressController.text =
-                              "${addr['logradouro']}, ${addr['numero']} - ${addr['bairro']}, ${addr['cidade']}/${addr['estado']} - CEP: ${addr['cep']}";
-                        }
-                      });
-                    },
-                    activeColor: Colors.brown.shade700,
-                    title: const Text('Entregar no endereço cadastrado'),
-                  ),
-
-                  RadioListTile<String>(
-                    value: 'novo',
-                    groupValue: deliveryOption,
-                    onChanged: (value) {
-                      setState(() {
-                        deliveryOption = value!;
-                        shippingFee = 4.0;
-                        deliveryAddressController.clear();
-                      });
-                    },
-                    activeColor: Colors.brown.shade700,
-                    title: const Text('Entregar em outro endereço'),
-                  ),
-
-                  // Campo de novo endereço
-                  if (deliveryOption == 'novo')
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: TextField(
-                        controller: newDeliveryAddressController,
-                        decoration: InputDecoration(
-                          labelText: "Novo endereço de entrega",
-                          hintText: "Informe outro endereço, se necessário",
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        ),
-                      ),
-                    ),
-
-                  // Linha separadora visível apenas quando "Cadastrado" estiver selecionado
-                  if (deliveryOption == 'cadastrado') ...[
-                    const SizedBox(height: 8),
-                    const Divider(thickness: 1, color: Colors.grey),
-                    const SizedBox(height: 8),
-
-                    // Lista de endereços cadastrados
-                    if (userAddresses.isEmpty)
-                      Text(
-                        "⚠️ Nenhum endereço cadastrado",
-                        style: TextStyle(color: Colors.grey[700], fontStyle: FontStyle.italic),
-                      )
-                    else
-                      Column(
-                        children: userAddresses.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var address = entry.value;
-                          return RadioListTile<int>(
-                            value: index,
-                            groupValue: selectedAddressIndex,
-                            onChanged: (value) {
-                              setState(() {
-                                selectedAddressIndex = value;
-                                if (value != null) {
-                                  var addr = userAddresses[value];
-                                  deliveryAddressController.text =
-                                      "${addr['logradouro']}, ${addr['numero']} - ${addr['bairro']}, ${addr['cidade']}/${addr['estado']} - CEP: ${addr['cep']}";
-                                }
-                              });
-                            },
-                            title: Text(
-                              "${address['logradouro']}, ${address['numero']} - ${address['bairro']}, ${address['cidade']}/${address['estado']} - CEP: ${address['cep']}",
-                              style: const TextStyle(fontSize: 14),
+              // Card Endereço de entrega
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            activeColor: Colors.brown.shade700,
-                          );
-                        }).toList(),
+                            child: Icon(
+                              Icons.location_on,
+                              color: Colors.blue.shade700,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            "Endereço de Entrega",
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.brown.shade900,
+                            ),
+                          ),
+                        ],
                       ),
-                  ],
-                ],
-              ),
-
-
-              const Divider(thickness: 2, color: Color.fromARGB(255, 95, 66, 57)),
-              const SizedBox(height: 20),
-
-              // Cupom de desconto
-              Text("Cupom de desconto", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.brown.shade700)),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: couponController,
-                      decoration: InputDecoration(
-                        hintText: "Insira o código do cupom",
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                      const SizedBox(height: 16),
+                      _buildDeliveryOption(
+                        Icons.store,
+                        'Retirada no local',
+                        'retirada',
+                        'Retire seu pedido na loja',
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.brown.shade700, foregroundColor: Colors.white),
-                    onPressed: () async {
-                      final code = couponController.text.trim();
-                      final response = await http.post(
-                        Uri.parse('$baseUrl/validar_cupom'),
-                        headers: {"Content-Type": "application/json"},
-                        body: jsonEncode({"codigo": code}),
-                      );
-                      if (response.statusCode == 200) {
-                        final cupom = jsonDecode(response.body);
-                        setState(() {
-                          final double cupomValue = cupom['desconto'] is String 
-                              ? double.parse(cupom['desconto']) 
-                              : cupom['desconto'].toDouble();
+                      _buildDeliveryOption(
+                        Icons.home,
+                        'Endereço cadastrado',
+                        'cadastrado',
+                        'Use um endereço salvo',
+                      ),
+                      _buildDeliveryOption(
+                        Icons.add_location,
+                        'Outro endereço',
+                        'novo',
+                        'Informe um novo local',
+                      ),
 
-                          discount = (cupom['tipo_desconto'] == 'percentual')
-                              ? calculateTotal() * (cupomValue / 100)
-                              : cupomValue;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Cupom '${cupom['codigo']}' aplicado!")));
-                      } else {
-                        setState(() => discount = 0);
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("⚠️ Cupom inválido ou expirado")));
-                      }
-                    },
-                    child: const Text("Aplicar"),
+                      if (deliveryOption == 'novo') ...[
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: newDeliveryAddressController,
+                          decoration: InputDecoration(
+                            labelText: "Novo endereço",
+                            hintText: "Rua, número, bairro, cidade...",
+                            prefixIcon: Icon(Icons.edit_location, color: Colors.brown.shade700),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      if (deliveryOption == 'cadastrado') ...[
+                        const SizedBox(height: 12),
+                        Divider(color: Colors.grey.shade300),
+                        const SizedBox(height: 12),
+                        if (userAddresses.isEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.orange.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.warning, color: Colors.orange.shade700, size: 20),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    "Nenhum endereço cadastrado",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      color: Colors.orange.shade900,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          ...userAddresses.asMap().entries.map((entry) {
+                            int index = entry.key;
+                            var address = entry.value;
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              decoration: BoxDecoration(
+                                color: selectedAddressIndex == index
+                                    ? Colors.brown.shade50
+                                    : Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: selectedAddressIndex == index
+                                      ? Colors.brown.shade700
+                                      : Colors.grey.shade300,
+                                  width: selectedAddressIndex == index ? 2 : 1,
+                                ),
+                              ),
+                              child: RadioListTile<int>(
+                                value: index,
+                                groupValue: selectedAddressIndex,
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedAddressIndex = value;
+                                  });
+                                },
+                                title: Text(
+                                  "${address['logradouro']}, ${address['numero']}",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.brown.shade900,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  "${address['bairro']}, ${address['cidade']}/${address['estado']} - CEP: ${address['cep']}",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                                activeColor: Colors.brown.shade700,
+                              ),
+                            );
+                          }).toList(),
+                      ],
+                    ],
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
 
-              // Método de pagamento
-              Text("Método de pagamento", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.brown.shade700)),
-              const SizedBox(height: 10),
-              _buildPaymentOption(Icons.pix, "Pix"),
-              _buildPaymentOption(Icons.credit_card, "Cartão de Crédito"),
-              _buildPaymentOption(Icons.attach_money, "Dinheiro"),
-              if (selectedPayment == "Cartão de Crédito") _buildCardFields(),
-              if (selectedPayment == "Pix") _buildPixCard(),
-              const SizedBox(height: 70),
+              // Card Cupom
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.local_offer,
+                              color: Colors.green.shade700,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            "Cupom de Desconto",
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.brown.shade900,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: couponController,
+                              decoration: InputDecoration(
+                                hintText: "Código do cupom",
+                                prefixIcon: Icon(Icons.confirmation_number, color: Colors.brown.shade700),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.shade700,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () async {
+                              final code = couponController.text.trim();
+                              final response = await http.post(
+                                Uri.parse('$baseUrl/validar_cupom'),
+                                headers: {"Content-Type": "application/json"},
+                                body: jsonEncode({"codigo": code}),
+                              );
+                              if (response.statusCode == 200) {
+                                final cupom = jsonDecode(response.body);
+                                setState(() {
+                                  final double cupomValue = cupom['desconto'] is String
+                                      ? double.parse(cupom['desconto'])
+                                      : cupom['desconto'].toDouble();
+
+                                  discount = (cupom['tipo_desconto'] == 'percentual')
+                                      ? calculateTotal() * (cupomValue / 100)
+                                      : cupomValue;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(Icons.check_circle, color: Colors.white),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text("Cupom '${cupom['codigo']}' aplicado!"),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor: Colors.green.shade700,
+                                  ),
+                                );
+                              } else {
+                                setState(() => discount = 0);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: const [
+                                        Icon(Icons.error, color: Colors.white),
+                                        SizedBox(width: 8),
+                                        Expanded(child: Text("Cupom inválido ou expirado")),
+                                      ],
+                                    ),
+                                    backgroundColor: Colors.red.shade700,
+                                  ),
+                                );
+                              }
+                            },
+                            child: Text(
+                              "Aplicar",
+                              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Card Pagamento
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.purple.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.payment,
+                              color: Colors.purple.shade700,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            "Forma de Pagamento",
+                            style: GoogleFonts.poppins(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.brown.shade900,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildPaymentOption(Icons.pix, "Pix", Colors.teal),
+                      _buildPaymentOption(Icons.credit_card, "Cartão de Crédito", Colors.blue),
+                      _buildPaymentOption(Icons.attach_money, "Dinheiro", Colors.green),
+                      if (selectedPayment == "Cartão de Crédito") _buildCardFields(),
+                      if (selectedPayment == "Pix") _buildPixCard(),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 100),
             ],
           ),
         ),
       ),
       bottomNavigationBar: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          color: Colors.brown.shade50,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            children: [
-              _buildSummaryRow("Subtotal", calculateTotal()),
-              _buildSummaryRow("Frete", shippingFee),
-              if (discount > 0) _buildSummaryRow("Desconto", -discount, isDiscount: true),
-              const Divider(height: 20, thickness: 1),
-              _buildSummaryRow("Total", totalWithDiscount, isTotal: true),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 197, 0, 0),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: () {
-                    _confirmPayment(totalWithDiscount);
-                  },
-                  child: const Text("Confirmar Pagamento", style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 8,
+                  offset: const Offset(0, -2),
                 ),
-              ),
+              ],
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                _buildSummaryRow("Subtotal", calculateTotal()),
+                _buildSummaryRow("Frete", shippingFee),
+                if (discount > 0) _buildSummaryRow("Desconto", -discount, isDiscount: true),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.green.shade50, Colors.green.shade100],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: _buildSummaryRow("Total", totalWithDiscount, isTotal: true),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.brown.shade700,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 4,
+                    ),
+                    onPressed: () {
+                      _confirmPayment(totalWithDiscount);
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.check_circle, color: Colors.white, size: 24),
+                        const SizedBox(width: 12),
+                        Text(
+                          "Confirmar Pagamento",
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          BottomNavigationBar(
+            selectedItemColor: Colors.brown.shade700,
+            unselectedItemColor: Colors.grey,
+            currentIndex: 0,
+            onTap: (index) async {
+              if (index == 0) {
+                await Navigator.pushNamed(context, Routes.cart);
+              } else if (index == 1) {
+                Navigator.pushNamed(context, Routes.home);
+              } else if (index == 2) {
+                Navigator.pushNamed(context, Routes.order);
+              }
+            },
+            items: const [
+              BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Carrinho'),
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+              BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Pedidos'),
             ],
           ),
-        ),
-        BottomNavigationBar(
-          selectedItemColor: Colors.brown.shade700,
-          unselectedItemColor: Colors.grey,
-          currentIndex: 1, // ou o índice que fizer sentido para PaymentScreen
-          onTap: (index) async {
-            if (index == 0) {
-              await Navigator.pushNamed(context, Routes.cart);
-            } else if (index == 1) {
-              Navigator.pushNamed(context, Routes.home);
-            } else if (index == 2) {
-              Navigator.pushNamed(context, Routes.order);
-            }
-          },
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Carrinho'),
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Pedidos'),
-          ],
-        ),
-      ],
-    ),
+        ],
+      ),
     );
   }
   
@@ -674,29 +992,95 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Widget _buildSummaryRow(String label, double value, {bool isDiscount = false, bool isTotal = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(fontSize: isTotal ? 18 : 16, fontWeight: FontWeight.bold, color: isDiscount ? Colors.green : Colors.black)),
-        Text("${isDiscount ? '- ' : ''}R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}", style: TextStyle(fontSize: isTotal ? 18 : 16, fontWeight: FontWeight.bold, color: isTotal ? Colors.brown.shade700 : (isDiscount ? Colors.green : Colors.black))),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: isTotal ? 18 : 15,
+              fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
+              color: isDiscount ? Colors.green.shade700 : Colors.grey.shade800,
+            ),
+          ),
+          Text(
+            "${isDiscount ? '- ' : ''}R\$ ${value.toStringAsFixed(2).replaceAll('.', ',')}",
+            style: GoogleFonts.poppins(
+              fontSize: isTotal ? 20 : 15,
+              fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
+              color: isTotal
+                  ? Colors.brown.shade700
+                  : (isDiscount ? Colors.green.shade700 : Colors.grey.shade800),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildCardFields() {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 12),
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
       child: Column(
         children: [
-          TextField(controller: cardNumberController, decoration: InputDecoration(labelText: "Número do cartão", border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)))),
-          const SizedBox(height: 10),
-          TextField(controller: cardNameController, decoration: InputDecoration(labelText: "Nome no cartão", border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)))),
-          const SizedBox(height: 10),
+          TextField(
+            controller: cardNumberController,
+            decoration: InputDecoration(
+              labelText: "Número do cartão",
+              prefixIcon: const Icon(Icons.credit_card),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: cardNameController,
+            decoration: InputDecoration(
+              labelText: "Nome no cartão",
+              prefixIcon: const Icon(Icons.person),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: TextField(controller: cardExpiryController, decoration: InputDecoration(labelText: "Validade (MM/AA)", border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))))),
-              const SizedBox(width: 5),
-              Expanded(child: TextField(controller: cardCVVController, decoration: InputDecoration(labelText: "CVV", border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))))),
+              Expanded(
+                child: TextField(
+                  controller: cardExpiryController,
+                  decoration: InputDecoration(
+                    labelText: "Validade",
+                    hintText: "MM/AA",
+                    prefixIcon: const Icon(Icons.calendar_today),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: cardCVVController,
+                  decoration: InputDecoration(
+                    labelText: "CVV",
+                    prefixIcon: const Icon(Icons.lock),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -705,76 +1089,146 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Widget _buildPixCard() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 6,
-      margin: const EdgeInsets.symmetric(vertical: 12),
-      shadowColor: Colors.brown.shade200,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              "Pague com Pix",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.brown.shade700,
-                fontSize: 18,
-
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.teal.shade50, Colors.teal.shade100],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.teal.shade200.withOpacity(0.5),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.pix, color: Colors.teal.shade700, size: 28),
+              const SizedBox(width: 12),
+              Text(
+                "Pague com Pix",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.teal.shade900,
+                  fontSize: 20,
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(colors: [Colors.brown.shade50, Colors.brown.shade100]),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.brown.shade200.withOpacity(0.5),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
+            child: Column(
+              children: [
+                QrImageView(
+                  data: pixKey,
+                  version: QrVersions.auto,
+                  size: 200,
+                  backgroundColor: Colors.white,
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ],
-              ),
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                children: [
-                  QrImageView(
-                    data: pixKey,
-                    version: QrVersions.auto,
-                    size: 200,
-                    backgroundColor: Colors.white,
-                  ),
-                  const SizedBox(height: 12),
-                  SelectableText(
+                  child: SelectableText(
                     pixKey,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: Colors.brown.shade700,
-                      fontSize: 14,
+                    style: GoogleFonts.robotoMono(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.teal.shade900,
+                      fontSize: 13,
                     ),
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.copy),
-                label: const Text("Copiar Chave"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: pixKey));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("✅ Chave Pix copiada!")),
-                  );
-                },
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.copy, size: 20),
+              label: Text(
+                "Copiar Chave Pix",
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: pixKey));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: const [
+                        Icon(Icons.check_circle, color: Colors.white),
+                        SizedBox(width: 8),
+                        Expanded(child: Text("Chave Pix copiada!")),
+                      ],
+                    ),
+                    backgroundColor: Colors.green.shade700,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentOption(IconData icon, String method, Color color) {
+    final isSelected = selectedPayment == method;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isSelected ? color.withOpacity(0.1) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? color : Colors.grey.shade300,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: RadioListTile<String>(
+        value: method,
+        groupValue: selectedPayment,
+        onChanged: (value) {
+          setState(() {
+            selectedPayment = value!;
+          });
+        },
+        activeColor: color,
+        title: Row(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(width: 12),
+            Text(
+              method,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -783,13 +1237,52 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _buildPaymentOption(IconData icon, String method) {
-    return RadioListTile<String>(
-      value: method,
-      groupValue: selectedPayment,
-      onChanged: (value) { setState(() { selectedPayment = value!; }); },
-      activeColor: Colors.brown.shade700,
-      title: Row(children: [Icon(icon, color: Colors.brown.shade700), const SizedBox(width: 10), Text(method, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))]),
+  Widget _buildDeliveryOption(IconData icon, String title, String value, String subtitle) {
+    final isSelected = deliveryOption == value;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.brown.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? Colors.brown.shade700 : Colors.grey.shade300,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: RadioListTile<String>(
+        value: value,
+        groupValue: deliveryOption,
+        onChanged: (val) {
+          setState(() {
+            deliveryOption = val!;
+            shippingFee = val == 'retirada' ? 0 : 4.0;
+          });
+        },
+        activeColor: Colors.brown.shade700,
+        title: Row(
+          children: [
+            Icon(icon, color: Colors.brown.shade700, size: 20),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(left: 32, top: 4),
+          child: Text(
+            subtitle,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ),
+      )
     );
   }
 }

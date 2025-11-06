@@ -15,7 +15,7 @@ class ChooseProfileScreen extends StatelessWidget {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: width > 600 ? 480 : width),
+              constraints: BoxConstraints(maxWidth: width > 480 ? 480 : width),
               child: Card(
                 elevation: 6,
                 shape: RoundedRectangleBorder(
@@ -27,17 +27,21 @@ class ChooseProfileScreen extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       ClipOval(
-                        child: Image.asset(
-                          'assets/images/pngtree-coffee-logo-design-png-image_6352424.jpg',
-                          width: 180,
-                          height: 180,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            width: 120,
-                            height: 120,
-                            color: Colors.brown.shade100,
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.coffee, size: 80, color: Colors.brown),
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          color: Colors.brown.shade50,
+                          child: Transform.scale(
+                            scale: 1.175, // aumenta a logo para preencher o círculo
+                            child: Image.asset(
+                              'images/pngtree-coffee-logo-design-png-image_6352424.png',
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) => const Icon(
+                                Icons.coffee, 
+                                size: 80, 
+                                color: Colors.brown,
+                              ),
+                            ),
                           ),
                         ),
                       ),
