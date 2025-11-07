@@ -1592,8 +1592,8 @@ def atualizar_status(id_relatorio):
 # Rota Home
 # ------------------------
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True) # Local
-    #app.run(host='0.0.0.0', port=8080, debug=True) # Online
+    app.run(host='0.0.0.0', port=8080, debug=True) # Online
+    #app.run(host='0.0.0.0', port=5000, debug=True) # Local
 #-----------------------------
 # Teste
 #-----------------------------
