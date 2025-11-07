@@ -290,7 +290,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       cartItems.clear();
       Navigator.pushNamedAndRemoveUntil(context, Routes.order, (_) => false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Pagamento confirmado e pedido gerado!"), backgroundColor: Colors.green,),
+        const SnackBar(content: Text("✅ Pagamento confirmado e pedido gerado!")),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

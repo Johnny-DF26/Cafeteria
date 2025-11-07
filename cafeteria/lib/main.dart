@@ -27,7 +27,7 @@ import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  GlobalConfig.GlobalConfig.useOnline = true; // Conecatar ao servidor local ou online
+  GlobalConfig.GlobalConfig.useOnline = false; // Conecatar ao servidor local ou online
 
 
 

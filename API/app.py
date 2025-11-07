@@ -387,6 +387,157 @@ def update_password(user_id):
         conn.close()
 
 
+# ...existing code...
+
+# Dicionário para controlar tentativas (em produção use Redis ou banco)
+tentativas_reset = {}
+
+# ...existing code...
+
+@app.route('/reset_password', methods=['POST'])
+def reset_password():
+    data = request.get_json()
+    
+    email = data.get('email')
+    cpf = data.get('cpf')
+    data_nascimento = data.get('data_nascimento')
+    nova_senha = data.get('nova_senha')
+
+    # Validações básicas
+    if not all([email, cpf, data_nascimento, nova_senha]):
+        return jsonify({'error': 'Email, CPF, data de nascimento e nova senha são obrigatórios'}), 400
+
+    if len(nova_senha) < 6:
+        return jsonify({'error': 'A senha deve ter pelo menos 6 caracteres'}), 400
+
+    # Remove pontos e traços do CPF (garante apenas números)
+    cpf_limpo = cpf.replace('.', '').replace('-', '')
+
+    conn = get_connection()
+    if conn is None:
+        return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
+
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        # 1. Verifica se o usuário existe pelo email
+        cursor.execute("""
+            SELECT idUsuario, nome_completo, email, ativo, cpf, data_nascimento
+            FROM usuario 
+            WHERE email = %s
+        """, (email,))
+        
+        usuario = cursor.fetchone()
+
+        if not usuario:
+            return jsonify({'error': 'Usuário não encontrado'}), 404
+
+        # 2. Verifica se a conta já está bloqueada
+        if usuario['ativo'] == 0:
+            return jsonify({'error': 'Conta bloqueada por excesso de tentativas. Entre em contato com o suporte.'}), 403
+
+        # 3. Inicializa contador de tentativas para este email
+        if email not in tentativas_reset:
+            tentativas_reset[email] = 0
+
+        # 4. Remove máscara do CPF do banco também (para comparação)
+        cpf_banco = usuario['cpf'].replace('.', '').replace('-', '')
+        
+        # Converte data do banco para string no formato YYYY-MM-DD
+        data_banco = str(usuario['data_nascimento'])
+        
+        print(f"[DEBUG] CPF enviado: {cpf_limpo} | CPF banco: {cpf_banco}")
+        print(f"[DEBUG] Data enviada: {data_nascimento} | Data banco: {data_banco}")
+        print(f"[DEBUG] Tentativas atuais: {tentativas_reset.get(email, 0)}")
+
+        # 5. Verifica se CPF e data de nascimento conferem
+        if cpf_banco == cpf_limpo and data_banco == data_nascimento:
+            # ✅ DADOS CORRETOS - Atualiza senha e reseta tentativas
+            cursor.execute("""
+                UPDATE usuario 
+                SET senha = %s, data_ultimo_acesso = NOW()
+                WHERE idUsuario = %s
+            """, (nova_senha, usuario['idUsuario']))
+            
+            conn.commit()
+
+            # Remove do controle de tentativas
+            if email in tentativas_reset:
+                del tentativas_reset[email]
+
+            print(f"[SUCESSO] Senha alterada para {email}")
+
+            return jsonify({
+                'message': 'Senha alterada com sucesso!',
+                'usuario': {
+                    'nome': usuario['nome_completo'],
+                    'email': usuario['email']
+                }
+            }), 200
+        
+        else:
+            # ❌ DADOS INCORRETOS - Incrementa tentativas
+            tentativas_reset[email] = tentativas_reset.get(email, 0) + 1
+            tentativas_restantes = 5 - tentativas_reset[email]
+
+            print(f"[TENTATIVA FALHA] Email: {email} | Tentativas: {tentativas_reset[email]} | Restantes: {tentativas_restantes}")
+
+            # Se atingiu 5 tentativas, BLOQUEIA A CONTA
+            if tentativas_reset[email] >= 5:
+                cursor.execute("""
+                    UPDATE usuario 
+                    SET ativo = 0
+                    WHERE email = %s
+                """, (email,))
+                conn.commit()
+                
+                print(f"[BLOQUEIO] ❌ Conta {email} BLOQUEADA! ativo=0")
+                
+                # Verifica se realmente bloqueou
+                cursor.execute("SELECT ativo FROM usuario WHERE email = %s", (email,))
+                check = cursor.fetchone()
+                print(f"[VERIFICAÇÃO] Status ativo após bloqueio: {check['ativo']}")
+                
+                return jsonify({
+                    'error': 'Conta bloqueada por excesso de tentativas inválidas. Entre em contato com o suporte.'
+                }), 403
+
+            # Ainda tem tentativas
+            return jsonify({
+                'error': f'Dados incorretos. Você tem {tentativas_restantes} tentativa(s) restante(s).'
+            }), 401
+
+    except Exception as e:
+        conn.rollback()
+        print(f"[ERRO CRÍTICO] {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Erro ao redefinir senha: {str(e)}'}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+# ...existing code...
+
+# ------------------------
+# Endpoint para verificar tentativas (DEBUG)
+# ------------------------
+@app.route('/debug_tentativas', methods=['GET'])
+def debug_tentativas():
+    return jsonify(tentativas_reset), 200
+
+# ------------------------
+# Endpoint para limpar tentativas de um email (DEBUG)
+# ------------------------
+@app.route('/limpar_tentativas/<email>', methods=['POST'])
+def limpar_tentativas(email):
+    if email in tentativas_reset:
+        del tentativas_reset[email]
+        return jsonify({'message': f'Tentativas de {email} limpas'}), 200
+    return jsonify({'message': 'Email não tinha tentativas registradas'}), 200
+
+# ...existing code...
+
 # ===================================================================================================================================================================================
 #                                                                   Gerenciamento de usuários -- Administrador
 # ===================================================================================================================================================================================
@@ -1441,8 +1592,8 @@ def atualizar_status(id_relatorio):
 # Rota Home
 # ------------------------
 if __name__ == '__main__':
-    #app.run(host='0.0.0.0', port=5000, debug=True) # Local
-    app.run(host='0.0.0.0', port=8080, debug=True) # Online
+    app.run(host='0.0.0.0', port=5000, debug=True) # Local
+    #app.run(host='0.0.0.0', port=8080, debug=True) # Online
 #-----------------------------
 # Teste
 #-----------------------------
