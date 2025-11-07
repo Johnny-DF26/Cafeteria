@@ -1360,8 +1360,8 @@ def atualizar_status(id_relatorio):
 # Rota Home
 # ------------------------
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8080))  # Railway define a porta automaticamente
-    app.run(host='0.0.0.0', port=port, debug=True)
+    #port = int(os.environ.get("PORT", 8080))  # Railway define a porta automaticamente
+    app.run(host='0.0.0.0', port=5000, debug=True)
 
 #-----------------------------
 # Teste
