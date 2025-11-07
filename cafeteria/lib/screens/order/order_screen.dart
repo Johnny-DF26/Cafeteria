@@ -424,7 +424,7 @@ class _OrderScreenState extends State<OrderScreen> {
                                       ),
                                       const SizedBox(width: 12),
                                       Text(
-                                        "Pedido #${order['idRelatorio_Pedido'] ?? (orders.length - index)}",
+                                        "Pedido #${orders.length - index}",
                                         style: GoogleFonts.poppins(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 18,

@@ -1554,18 +1554,21 @@ def listar_relatorios():
 
     cursor.execute("""
         SELECT 
-            idRelatorio_Pedido,
-            Usuario_idUsuario,
-            endereco,
-            valor_total,
-            valor_frete,
-            valor_desconto,
-            status,
-            data_status,
-            observacao,
-            tipo_pagamento
-        FROM relatorio_pedido
-        ORDER BY idRelatorio_Pedido DESC
+            rp.idRelatorio_Pedido,
+            rp.Usuario_idUsuario,
+            u.nome_completo AS nome_usuario,
+            u.telefone AS telefone_usuario,
+            rp.endereco,
+            rp.valor_total,
+            rp.valor_frete,
+            rp.valor_desconto,
+            rp.status,
+            rp.data_status,
+            rp.observacao,
+            rp.tipo_pagamento
+        FROM relatorio_pedido rp
+        JOIN usuario u ON rp.Usuario_idUsuario = u.idUsuario
+        ORDER BY rp.idRelatorio_Pedido DESC
     """)
 
     relatorios = cursor.fetchall()

@@ -234,6 +234,19 @@ class _OrderAdminScreenState extends State<OrderAdminScreen> {
     return Colors.grey;
   }
 
+  String formatarTelefone(String telefone) {
+    // Remove tudo que não for número
+    final numeros = telefone.replaceAll(RegExp(r'\D'), '');
+    if (numeros.length == 11) {
+      // Celular: (99) 99999-9999
+      return '(${numeros.substring(0, 2)}) ${numeros.substring(2, 7)}-${numeros.substring(7)}';
+    } else if (numeros.length == 10) {
+      // Fixo: (99) 9999-9999
+      return '(${numeros.substring(0, 2)}) ${numeros.substring(2, 6)}-${numeros.substring(6)}';
+    }
+    return telefone;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -552,6 +565,14 @@ class _OrderAdminScreenState extends State<OrderAdminScreen> {
                               const SizedBox(height: 12),
 
                               _buildInfoRow(Icons.person, "ID Usuário", "${relatorio['Usuario_idUsuario']}"),
+                              _buildInfoRow(Icons.account_circle, "Nome", relatorio['nome_usuario'] ?? '---'),
+                              _buildInfoRow(
+  Icons.phone,
+  "Telefone",
+  relatorio['telefone_usuario'] != null && relatorio['telefone_usuario'].toString().isNotEmpty
+      ? formatarTelefone(relatorio['telefone_usuario'].toString())
+      : '---',
+),
                               const SizedBox(height: 12),
 
                               Text(
