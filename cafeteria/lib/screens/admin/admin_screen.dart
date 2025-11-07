@@ -190,12 +190,12 @@ class _AdminScreenState extends State<AdminScreen> {
                   ),
 
                   // Configurações do app
-                  ListTile(
+                  /*ListTile(
                     leading: const Icon(Icons.tune),
                     title: const Text('Configurações do app'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () {},
-                  ),
+                  ),*/
 
                   // Privacidade
                   ListTile(

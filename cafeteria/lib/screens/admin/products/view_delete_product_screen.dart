@@ -315,8 +315,8 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
           SliverAppBar(
             pinned: true,
             backgroundColor: Colors.brown.shade700,
-            expandedHeight: 110,
-            automaticallyImplyLeading: false,
+            expandedHeight: 100,
+            automaticallyImplyLeading: true,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,

@@ -398,7 +398,7 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
             pinned: true,
             backgroundColor: Colors.brown.shade700,
             expandedHeight: 100,
-            automaticallyImplyLeading: false,
+            automaticallyImplyLeading: true,
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
               title: Text(

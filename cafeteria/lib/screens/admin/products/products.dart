@@ -90,15 +90,15 @@ class ProductsScreen extends StatelessWidget {
           SliverAppBar(
             pinned: true,
             backgroundColor: Colors.brown.shade700,
-            expandedHeight: 120,
-            automaticallyImplyLeading: false,
+            expandedHeight: 100,
+            automaticallyImplyLeading: true,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
               title: Text(
                 'Cafe Gourmet',
                 style: GoogleFonts.pacifico(
-                  fontSize: 32,
+                  fontSize: 30,
                   color: Colors.white,
                   fontWeight: FontWeight.w400,
                   shadows: [
