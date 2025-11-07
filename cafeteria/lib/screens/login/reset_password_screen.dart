@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
@@ -72,9 +73,17 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Senha alterada com sucesso!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text('✅ Senha alterada com sucesso!'),
+            ],
+          ),
+          backgroundColor: Colors.green.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
 
@@ -98,16 +107,42 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Row(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
           children: [
-            Icon(Icons.block, color: Colors.red),
-            SizedBox(width: 8),
-            Text('Conta Bloqueada'),
+            Icon(Icons.block, color: Colors.red.shade700, size: 32),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Conta Bloqueada',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ],
         ),
-        content: const Text(
-          'Sua conta foi bloqueada por excesso de tentativas inválidas.\n\n'
-          'Entre em contato com o suporte para desbloqueá-la.',
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Sua conta foi bloqueada por excesso de tentativas inválidas de redefinição de senha.',
+              style: TextStyle(fontSize: 15, fontFamily: 'Poppins'),
+            ),
+            SizedBox(height: 16),
+            Text(
+              '📧 Entre em contato com o suporte:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+              ),
+            ),
+            SizedBox(height: 8),
+            Text('• Email: suporte@cafegourmet.com', style: TextStyle(fontFamily: 'Poppins')),
+            Text('• Telefone: (XX) XXXXX-XXXX', style: TextStyle(fontFamily: 'Poppins')),
+          ],
         ),
         actions: [
           TextButton(
@@ -115,7 +150,19 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               Navigator.of(context).pop();
               Navigator.popUntil(context, (route) => route.isFirst);
             },
-            child: const Text('OK'),
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.brown.shade700,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text(
+              'ENTENDI',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+              ),
+            ),
           ),
         ],
       ),
@@ -176,213 +223,389 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     final width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Redefinir senha')),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: width > 600 ? 480 : width),
-            child: Card(
-              elevation: 6,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Para redefinir sua senha, confirme seus dados',
-                        style: TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-
-                      if (_errorMessage != null) ...[
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: Text(
+          'Café Gourmet',
+          style: GoogleFonts.pacifico(
+            fontSize: 30,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.brown,
+        foregroundColor: Colors.white,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.brown.shade50,
+              Colors.white,
+            ],
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: width > 600 ? 480 : width),
+              child: Card(
+                elevation: 8,
+                shadowColor: Colors.brown.withOpacity(0.3),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Ícone de cabeçalho
                         Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: _errorMessage!.contains('bloqueada') 
-                                ? Colors.red.shade100 
-                                : (_errorMessage!.contains('tentativa')
-                                    ? Colors.orange.shade50
-                                    : Colors.red.shade50),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: _errorMessage!.contains('bloqueada')
-                                  ? Colors.red.shade700
-                                  : (_errorMessage!.contains('tentativa')
-                                      ? Colors.orange.shade700
-                                      : Colors.red.shade700),
-                              width: 2,
-                            ),
+                            color: Colors.brown.shade50,
+                            shape: BoxShape.circle,
                           ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                _errorMessage!.contains('bloqueada')
-                                    ? Icons.block
-                                    : (_errorMessage!.contains('tentativa')
-                                        ? Icons.warning_amber
-                                        : Icons.error_outline),
+                          child: Icon(
+                            Icons.lock_reset_rounded,
+                            size: 48,
+                            color: Colors.brown.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        Text(
+                          'Redefinir Senha',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.brown.shade800,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Para redefinir sua senha, confirme seus dados',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                            fontFamily: 'Poppins',
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+
+                        if (_errorMessage != null) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _errorMessage!.contains('bloqueada') 
+                                  ? Colors.red.shade100 
+                                  : (_errorMessage!.contains('tentativa')
+                                      ? Colors.orange.shade50
+                                      : Colors.red.shade50),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
                                 color: _errorMessage!.contains('bloqueada')
                                     ? Colors.red.shade700
                                     : (_errorMessage!.contains('tentativa')
                                         ? Colors.orange.shade700
                                         : Colors.red.shade700),
-                                size: 28,
+                                width: 2,
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _errorMessage!.contains('bloqueada')
-                                          ? '🔒 Conta Bloqueada'
-                                          : (_errorMessage!.contains('tentativa')
-                                              ? '⚠️ Atenção'
-                                              : '❌ Erro'),
-                                      style: TextStyle(
-                                        color: _errorMessage!.contains('bloqueada')
-                                            ? Colors.red.shade900
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  _errorMessage!.contains('bloqueada')
+                                      ? Icons.block_rounded
+                                      : (_errorMessage!.contains('tentativa')
+                                          ? Icons.warning_amber_rounded
+                                          : Icons.error_outline_rounded),
+                                  color: _errorMessage!.contains('bloqueada')
+                                      ? Colors.red.shade700
+                                      : (_errorMessage!.contains('tentativa')
+                                          ? Colors.orange.shade700
+                                          : Colors.red.shade700),
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _errorMessage!.contains('bloqueada')
+                                            ? '🔒 Conta Bloqueada'
                                             : (_errorMessage!.contains('tentativa')
-                                                ? Colors.orange.shade900
-                                                : Colors.red.shade900),
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                                                ? '⚠️ Atenção'
+                                                : '❌ Erro'),
+                                        style: TextStyle(
+                                          color: _errorMessage!.contains('bloqueada')
+                                              ? Colors.red.shade900
+                                              : (_errorMessage!.contains('tentativa')
+                                                  ? Colors.orange.shade900
+                                                  : Colors.red.shade900),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          fontFamily: 'Poppins',
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _errorMessage!,
-                                      style: TextStyle(
-                                        color: _errorMessage!.contains('bloqueada')
-                                            ? Colors.red.shade800
-                                            : (_errorMessage!.contains('tentativa')
-                                                ? Colors.orange.shade800
-                                                : Colors.red.shade800),
-                                        fontSize: 14,
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _errorMessage!,
+                                        style: TextStyle(
+                                          color: _errorMessage!.contains('bloqueada')
+                                              ? Colors.red.shade800
+                                              : (_errorMessage!.contains('tentativa')
+                                                  ? Colors.orange.shade800
+                                                  : Colors.red.shade800),
+                                          fontSize: 14,
+                                          fontFamily: 'Poppins',
+                                        ),
                                       ),
+                                      if (_errorMessage!.contains('tentativa')) ...[
+                                        const SizedBox(height: 8),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(4),
+                                          child: LinearProgressIndicator(
+                                            value: _getTentativasProgress(),
+                                            minHeight: 6,
+                                            backgroundColor: Colors.orange.shade200,
+                                            valueColor: AlwaysStoppedAnimation<Color>(
+                                              Colors.orange.shade700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+
+                        // Email
+                        TextFormField(
+                          controller: _emailCtrl,
+                          style: const TextStyle(fontFamily: 'Poppins'),
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            labelStyle: const TextStyle(fontFamily: 'Poppins'),
+                            hintText: 'seu@email.com',
+                            hintStyle: const TextStyle(fontFamily: 'Poppins'),
+                            prefixIcon: Icon(Icons.email_rounded, color: Colors.brown.shade600),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.brown.shade600, width: 2),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: _validateEmail,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // CPF com máscara
+                        TextFormField(
+                          controller: _cpfCtrl,
+                          style: const TextStyle(fontFamily: 'Poppins'),
+                          decoration: InputDecoration(
+                            labelText: 'CPF',
+                            labelStyle: const TextStyle(fontFamily: 'Poppins'),
+                            hintText: '000.000.000-00',
+                            hintStyle: const TextStyle(fontFamily: 'Poppins'),
+                            prefixIcon: Icon(Icons.credit_card_rounded, color: Colors.brown.shade600),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.brown.shade600, width: 2),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                          ),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [_cpfMask],
+                          validator: _validateCPF,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Data de Nascimento com máscara
+                        TextFormField(
+                          controller: _birthDateCtrl,
+                          style: const TextStyle(fontFamily: 'Poppins'),
+                          decoration: InputDecoration(
+                            labelText: 'Data de Nascimento',
+                            labelStyle: const TextStyle(fontFamily: 'Poppins'),
+                            hintText: 'DD/MM/AAAA',
+                            hintStyle: const TextStyle(fontFamily: 'Poppins'),
+                            prefixIcon: Icon(Icons.cake_rounded, color: Colors.brown.shade600),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.brown.shade600, width: 2),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                          ),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [_dateMask],
+                          validator: _validateDate,
+                        ),
+                        const SizedBox(height: 24),
+
+                        Divider(color: Colors.grey.shade300, thickness: 1),
+                        const SizedBox(height: 16),
+
+                        // Nova senha
+                        TextFormField(
+                          controller: _newPassCtrl,
+                          style: const TextStyle(fontFamily: 'Poppins'),
+                          decoration: InputDecoration(
+                            labelText: 'Nova senha',
+                            labelStyle: const TextStyle(fontFamily: 'Poppins'),
+                            hintText: 'Mínimo 6 caracteres',
+                            hintStyle: const TextStyle(fontFamily: 'Poppins'),
+                            prefixIcon: Icon(Icons.lock_rounded, color: Colors.brown.shade600),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscure ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                                color: Colors.grey[600],
+                              ),
+                              onPressed: () => setState(() => _obscure = !_obscure),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.brown.shade600, width: 2),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                          ),
+                          obscureText: _obscure,
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return 'Digite a nova senha';
+                            if (v.length < 6) return 'Senha mínima 6 caracteres';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Confirmar senha
+                        TextFormField(
+                          controller: _confirmPassCtrl,
+                          style: const TextStyle(fontFamily: 'Poppins'),
+                          decoration: InputDecoration(
+                            labelText: 'Confirmar senha',
+                            labelStyle: const TextStyle(fontFamily: 'Poppins'),
+                            hintText: 'Digite a senha novamente',
+                            hintStyle: const TextStyle(fontFamily: 'Poppins'),
+                            prefixIcon: Icon(Icons.lock_outline_rounded, color: Colors.brown.shade600),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureConfirm ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                                color: Colors.grey[600],
+                              ),
+                              onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.brown.shade600, width: 2),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                          ),
+                          obscureText: _obscureConfirm,
+                          validator: (v) {
+                            if (v != _newPassCtrl.text) return 'Senhas não conferem';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 24),
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.brown.shade700,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 3,
+                            ),
+                            onPressed: _loading ? null : _resetPassword,
+                            child: _loading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.white,
                                     ),
-                                    if (_errorMessage!.contains('tentativa')) ...[
-                                      const SizedBox(height: 8),
-                                      LinearProgressIndicator(
-                                        value: _getTentativasProgress(),
-                                        backgroundColor: Colors.orange.shade200,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.orange.shade700,
+                                  )
+                                : const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.check_circle_rounded, size: 22),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Alterar Senha',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          fontFamily: 'Poppins',
                                         ),
                                       ),
                                     ],
-                                  ],
-                                ),
-                              ),
-                            ],
+                                  ),
                           ),
                         ),
-                        const SizedBox(height: 16),
                       ],
-
-                      // Email
-                      TextFormField(
-                        controller: _emailCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: Icon(Icons.email),
-                          hintText: 'seu@email.com',
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: _validateEmail,
-                      ),
-                      const SizedBox(height: 12),
-
-                      // CPF com máscara
-                      TextFormField(
-                        controller: _cpfCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'CPF',
-                          prefixIcon: Icon(Icons.badge),
-                          hintText: '000.000.000-00',
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [_cpfMask],
-                        validator: _validateCPF,
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Data de Nascimento com máscara
-                      TextFormField(
-                        controller: _birthDateCtrl,
-                        decoration: const InputDecoration(
-                          labelText: 'Data de Nascimento',
-                          prefixIcon: Icon(Icons.calendar_today),
-                          hintText: 'DD/MM/AAAA',
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [_dateMask],
-                        validator: _validateDate,
-                      ),
-                      const SizedBox(height: 20),
-
-                      const Divider(),
-                      const SizedBox(height: 12),
-
-                      // Nova senha
-                      TextFormField(
-                        controller: _newPassCtrl,
-                        decoration: InputDecoration(
-                          labelText: 'Nova senha',
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-                            onPressed: () => setState(() => _obscure = !_obscure),
-                          ),
-                        ),
-                        obscureText: _obscure,
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return 'Digite a nova senha';
-                          if (v.length < 6) return 'Senha mínima 6 caracteres';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Confirmar senha
-                      TextFormField(
-                        controller: _confirmPassCtrl,
-                        decoration: InputDecoration(
-                          labelText: 'Confirmar senha',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(_obscureConfirm ? Icons.visibility : Icons.visibility_off),
-                            onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
-                          ),
-                        ),
-                        obscureText: _obscureConfirm,
-                        validator: (v) {
-                          if (v != _newPassCtrl.text) return 'Senhas não conferem';
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _loading ? null : _resetPassword,
-                          child: _loading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2))
-                              : const Text('Alterar senha'),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

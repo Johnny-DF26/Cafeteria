@@ -16,7 +16,6 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   int userCount = 0;
   bool _loadingCount = false;
 
-
   Future<void> fetchUserCount() async {
     setState(() => _loadingCount = true);
     try {
@@ -36,19 +35,65 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     required String label,
     required VoidCallback onTap,
   }) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.brown.shade700),
-      title: Text(
-        label,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w400,
-          color: Colors.brown.shade800,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.brown.shade100.withOpacity(0.5),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: Colors.brown.shade100,
+          width: 1,
         ),
       ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.brown.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Colors.brown.shade700,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.brown.shade900,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.brown.shade400,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -56,34 +101,60 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   Widget build(BuildContext context) {
     print("Dados do administrador recebidos no Management: ${widget.adminData}");
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey.shade50,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             pinned: true,
             backgroundColor: Colors.brown.shade700,
-            expandedHeight: 100,
+            expandedHeight: 110,
             automaticallyImplyLeading: false,
+            elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
               title: Text(
                 'Cafe Gourmet',
                 style: GoogleFonts.pacifico(
-                  fontSize: 30,
+                  fontSize: 32,
                   color: Colors.white,
                   fontWeight: FontWeight.w400,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black26,
+                      offset: const Offset(0, 2),
+                      blurRadius: 4,
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    'Gerenciamento de Usuários',
+                    style: GoogleFonts.poppins(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.brown.shade900,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Gerencie os usuários do sistema',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.brown.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   _buildTopicTile(
-                    icon: Icons.person_add,
+                    icon: Icons.person_add_rounded,
                     label: 'Adicionar Usuário',
                     onTap: () {
                       Navigator.push(
@@ -95,8 +166,8 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                     },
                   ),
                   _buildTopicTile(
-                    icon: Icons.visibility,
-                    label: 'Visualizar Usuários',
+                    icon: Icons.visibility_rounded,
+                    label: 'Atualizar Usuários',
                     onTap: () {
                       Navigator.push(
                         context,
@@ -106,43 +177,85 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                       );
                     },
                   ),
-                  _buildTopicTile(
-                    icon: Icons.edit,
-                    label: 'Editar Usuário',
-                    onTap: () {},
-                  ),
-                  const SizedBox(height: 20),
-                  // Quantidade de usuários
-                  ListTile(
-                    leading: const Icon(Icons.people_alt, color: Colors.brown),
-                    title: Text(
-                      'Usuários cadastrados',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.brown.shade800,
+                  // Card de estatísticas
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.brown.shade700,
+                          Colors.brown.shade500,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.brown.shade300.withOpacity(0.5),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    trailing: _loadingCount
-                        ? SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.brown.shade700,
-                            ),
-                          )
-                        : Text(
-                            userCount.toString(),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.brown.shade900,
-                            ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                    onTap: _loadingCount ? null : () => fetchUserCount(),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                          child: const Icon(
+                            Icons.people_alt_rounded,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Usuários Cadastrados',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              _loadingCount
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      userCount.toString(),
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: _loadingCount ? null : () => fetchUserCount(),
+                          icon: Icon(
+                            Icons.refresh_rounded,
+                            color: Colors.white.withOpacity(0.9),
+                            size: 28,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

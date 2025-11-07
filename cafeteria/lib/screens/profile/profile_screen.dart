@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -19,9 +18,23 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   int _currentIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserData();
+    });
+  }
+
+  Future<void> _loadUserData() async {
+    if (!mounted) return;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    await userProvider.fetchUserData();
+  }
+
   Future<void> _refresh() async {
     if (!mounted) return;
-    setState(() {}); // força rebuild; se quiser, chame provider.fetch...
+    await _loadUserData();
   }
 
   Future<void> _confirmLogout() async {
@@ -56,20 +69,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _formatDate(String? value) {
     if (value == null || value.toString().trim().isEmpty) return '-';
     final s = value.toString();
+    
     DateTime? dt = DateTime.tryParse(s);
-    if (dt != null) return DateFormat('dd/MM/yyyy').format(dt.toLocal());
+    if (dt != null) {
+      return DateFormat('dd/MM/yyyy').format(dt);
+    }
+    
     try {
       final parsed = DateFormat('dd/MM/yyyy').parseStrict(s);
       return DateFormat('dd/MM/yyyy').format(parsed);
     } catch (_) {}
+    
     try {
-      dt = DateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'").parseUtc(s).toLocal();
+      dt = DateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'").parseUtc(s);
       return DateFormat('dd/MM/yyyy').format(dt);
     } catch (_) {}
+    
     return s;
   }
 
-  // tenta extrair o primeiro valor não-nulo entre várias chaves possíveis
   String _pick(Map<String, dynamic>? userData, List<String> keys) {
     if (userData == null) return '-';
     for (final k in keys) {
@@ -93,7 +111,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return phone;
     }
     
-    // Formatar: (DD) XXXXX-XXXX
     final ddd = digitsOnly.substring(0, 2);
     final firstPart = digitsOnly.substring(2, digitsOnly.length >= 7 ? 7 : digitsOnly.length);
     final secondPart = digitsOnly.length > 7 ? digitsOnly.substring(7) : '';
@@ -101,13 +118,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return secondPart.isNotEmpty ? '($ddd) $firstPart-$secondPart' : '($ddd) $firstPart';
   }
 
+  String _formatCPF(String? cpf) {
+    if (cpf == null || cpf.isEmpty || cpf == '-') {
+      return '-';
+    }
+    
+    final digitsOnly = cpf.replaceAll(RegExp(r'\D'), '');
+    
+    if (digitsOnly.length != 11) {
+      return cpf;
+    }
+    
+    return '${digitsOnly.substring(0, 3)}.${digitsOnly.substring(3, 6)}.${digitsOnly.substring(6, 9)}-${digitsOnly.substring(9, 11)}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final userData = Provider.of<UserProvider>(context).userData;
-
-    if (kDebugMode && (userData == null || userData.isEmpty)) {
-      print('ProfileScreen: userData vazio => $userData');
-    }
 
     final name = _pick(userData, ['nome_completo', 'nome_social', 'nome']);
     final email = _pick(userData, ['email', 'email_usuario']);
@@ -169,7 +196,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 12, width: 12),
                           Text(email != '-' ? email : '-', style: TextStyle(fontSize: 14, color: Colors.grey.shade700)),
                           const SizedBox(height: 12, width: 12),
-                          // botões removidos conforme solicitado
                         ],
                       ),
                     ),
@@ -220,29 +246,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildInfoCard(BuildContext context, String nome, String email, String cpf, String telefone, String dataNasc) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Meus Dados', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.brown.shade700)),
-          const SizedBox(height: 8),
-          _infoRow('Nome', nome),
-          _infoRow('Email', email != '-' ? email : '-'),
-          _infoRow('CPF', cpf != '-' ? cpf : '-'),
-          _infoRow('Telefone', telefone),
-          _infoRow('Data de Nascimento', dataNasc != '-' ? dataNasc : '-'),
-          const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PersonalScreen())),
-              child: const Text('Editar dados'),
-            ),
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, _) {
+        final userData = userProvider.userData;
+        
+        final name = _pick(userData, ['nome_completo', 'nome_social', 'nome']);
+        final emailVal = _pick(userData, ['email', 'email_usuario']);
+        final cpfRaw = _pick(userData, ['cpf', 'CPF', 'cpf_usuario']);
+        final cpfVal = _formatCPF(cpfRaw);
+        final telefoneRaw = _pick(userData, ['telefone', 'telefone_celular', 'celular', 'fone']);
+        final telefoneVal = _formatPhone(telefoneRaw);
+        final dataNascRaw = _pick(userData, ['data_nascimento', 'dataNascimento', 'data_nasc']);
+        final dataNascVal = dataNascRaw == '-' ? '-' : _formatDate(dataNascRaw);
+        
+        return Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Meus Dados', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.brown.shade700)),
+              const SizedBox(height: 8),
+              _infoRow('Nome', name),
+              _infoRow('Email', emailVal != '-' ? emailVal : '-'),
+              _infoRow('CPF', cpfVal),
+              _infoRow('Telefone', telefoneVal),
+              _infoRow('Data de Nascimento', dataNascVal != '-' ? dataNascVal : '-'),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PersonalScreen()),
+                    );
+                    
+                    if (mounted) {
+                      await _loadUserData();
+                    }
+                  },
+                  child: const Text('Editar dados'),
+                ),
+              ),
+            ]),
           ),
-        ]),
-      ),
+        );
+      },
     );
   }
 

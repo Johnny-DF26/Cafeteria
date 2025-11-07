@@ -91,6 +91,7 @@ def login():
                     'telefone': user.get('telefone'),
                     'endereco': user.get('endereco'),
                     'dataNascimento': user.get('data_nascimento'),
+                    'status': user.get('ativo')  # ⚡ ADICIONE ESTA LINHA
                 }
             }), 200
 
@@ -387,12 +388,13 @@ def update_password(user_id):
         conn.close()
 
 
-# ...existing code...
+
+# ------------------------
+# Reset de Senha (Email + CPF + Data de Nascimento) com limite de tentativas
+# ------------------------
 
 # Dicionário para controlar tentativas (em produção use Redis ou banco)
 tentativas_reset = {}
-
-# ...existing code...
 
 @app.route('/reset_password', methods=['POST'])
 def reset_password():
@@ -403,15 +405,12 @@ def reset_password():
     data_nascimento = data.get('data_nascimento')
     nova_senha = data.get('nova_senha')
 
-    # Validações básicas
+    # Validações
     if not all([email, cpf, data_nascimento, nova_senha]):
         return jsonify({'error': 'Email, CPF, data de nascimento e nova senha são obrigatórios'}), 400
 
     if len(nova_senha) < 6:
         return jsonify({'error': 'A senha deve ter pelo menos 6 caracteres'}), 400
-
-    # Remove pontos e traços do CPF (garante apenas números)
-    cpf_limpo = cpf.replace('.', '').replace('-', '')
 
     conn = get_connection()
     if conn is None:
@@ -420,9 +419,9 @@ def reset_password():
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # 1. Verifica se o usuário existe pelo email
+        # 1. Verifica se o usuário existe e está ativo
         cursor.execute("""
-            SELECT idUsuario, nome_completo, email, ativo, cpf, data_nascimento
+            SELECT idUsuario, nome_completo, email, ativo 
             FROM usuario 
             WHERE email = %s
         """, (email,))
@@ -432,7 +431,7 @@ def reset_password():
         if not usuario:
             return jsonify({'error': 'Usuário não encontrado'}), 404
 
-        # 2. Verifica se a conta já está bloqueada
+        # 2. Verifica se a conta está bloqueada
         if usuario['ativo'] == 0:
             return jsonify({'error': 'Conta bloqueada por excesso de tentativas. Entre em contato com o suporte.'}), 403
 
@@ -440,49 +439,21 @@ def reset_password():
         if email not in tentativas_reset:
             tentativas_reset[email] = 0
 
-        # 4. Remove máscara do CPF do banco também (para comparação)
-        cpf_banco = usuario['cpf'].replace('.', '').replace('-', '')
+        # 4. Verifica se CPF e data de nascimento conferem
+        cursor.execute("""
+            SELECT idUsuario, nome_completo, email 
+            FROM usuario 
+            WHERE email = %s AND cpf = %s AND data_nascimento = %s AND ativo = 1
+        """, (email, cpf, data_nascimento))
         
-        # Converte data do banco para string no formato YYYY-MM-DD
-        data_banco = str(usuario['data_nascimento'])
-        
-        print(f"[DEBUG] CPF enviado: {cpf_limpo} | CPF banco: {cpf_banco}")
-        print(f"[DEBUG] Data enviada: {data_nascimento} | Data banco: {data_banco}")
-        print(f"[DEBUG] Tentativas atuais: {tentativas_reset.get(email, 0)}")
+        usuario_validado = cursor.fetchone()
 
-        # 5. Verifica se CPF e data de nascimento conferem
-        if cpf_banco == cpf_limpo and data_banco == data_nascimento:
-            # ✅ DADOS CORRETOS - Atualiza senha e reseta tentativas
-            cursor.execute("""
-                UPDATE usuario 
-                SET senha = %s, data_ultimo_acesso = NOW()
-                WHERE idUsuario = %s
-            """, (nova_senha, usuario['idUsuario']))
-            
-            conn.commit()
-
-            # Remove do controle de tentativas
-            if email in tentativas_reset:
-                del tentativas_reset[email]
-
-            print(f"[SUCESSO] Senha alterada para {email}")
-
-            return jsonify({
-                'message': 'Senha alterada com sucesso!',
-                'usuario': {
-                    'nome': usuario['nome_completo'],
-                    'email': usuario['email']
-                }
-            }), 200
-        
-        else:
-            # ❌ DADOS INCORRETOS - Incrementa tentativas
-            tentativas_reset[email] = tentativas_reset.get(email, 0) + 1
+        if not usuario_validado:
+            # Incrementa tentativas
+            tentativas_reset[email] += 1
             tentativas_restantes = 5 - tentativas_reset[email]
 
-            print(f"[TENTATIVA FALHA] Email: {email} | Tentativas: {tentativas_reset[email]} | Restantes: {tentativas_restantes}")
-
-            # Se atingiu 5 tentativas, BLOQUEIA A CONTA
+            # Se atingiu 5 tentativas, bloqueia a conta
             if tentativas_reset[email] >= 5:
                 cursor.execute("""
                     UPDATE usuario 
@@ -491,52 +462,42 @@ def reset_password():
                 """, (email,))
                 conn.commit()
                 
-                print(f"[BLOQUEIO] ❌ Conta {email} BLOQUEADA! ativo=0")
-                
-                # Verifica se realmente bloqueou
-                cursor.execute("SELECT ativo FROM usuario WHERE email = %s", (email,))
-                check = cursor.fetchone()
-                print(f"[VERIFICAÇÃO] Status ativo após bloqueio: {check['ativo']}")
-                
                 return jsonify({
-                    'error': 'Conta bloqueada por excesso de tentativas inválidas. Entre em contato com o suporte.'
+                    'error': '❌ Conta bloqueada por excesso de tentativas inválidas. Entre em contato com o suporte.'
                 }), 403
 
-            # Ainda tem tentativas
             return jsonify({
                 'error': f'Dados incorretos. Você tem {tentativas_restantes} tentativa(s) restante(s).'
             }), 401
 
+        # 5. Dados corretos - Atualiza a senha e reseta tentativas
+        cursor.execute("""
+            UPDATE usuario 
+            SET senha = %s, data_ultimo_acesso = NOW()
+            WHERE idUsuario = %s
+        """, (nova_senha, usuario_validado['idUsuario']))
+        
+        conn.commit()
+
+        # Remove do controle de tentativas
+        if email in tentativas_reset:
+            del tentativas_reset[email]
+
+        return jsonify({
+            'message': '✅ Senha alterada com sucesso!',
+            'usuario': {
+                'nome': usuario_validado['nome_completo'],
+                'email': usuario_validado['email']
+            }
+        }), 200
+
     except Exception as e:
         conn.rollback()
-        print(f"[ERRO CRÍTICO] {str(e)}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'error': f'Erro ao redefinir senha: {str(e)}'}), 500
     finally:
         cursor.close()
         conn.close()
 
-# ...existing code...
-
-# ------------------------
-# Endpoint para verificar tentativas (DEBUG)
-# ------------------------
-@app.route('/debug_tentativas', methods=['GET'])
-def debug_tentativas():
-    return jsonify(tentativas_reset), 200
-
-# ------------------------
-# Endpoint para limpar tentativas de um email (DEBUG)
-# ------------------------
-@app.route('/limpar_tentativas/<email>', methods=['POST'])
-def limpar_tentativas(email):
-    if email in tentativas_reset:
-        del tentativas_reset[email]
-        return jsonify({'message': f'Tentativas de {email} limpas'}), 200
-    return jsonify({'message': 'Email não tinha tentativas registradas'}), 200
-
-# ...existing code...
 
 # ===================================================================================================================================================================================
 #                                                                   Gerenciamento de usuários -- Administrador
@@ -552,7 +513,7 @@ def listar_usuarios():
 
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute("SELECT idUsuario, nome_completo, email, telefone, data_nascimento, cpf FROM usuario")
+        cursor.execute("SELECT idUsuario, nome_completo, email, telefone, data_nascimento, ativo, cpf FROM usuario")
         users = cursor.fetchall()
         return jsonify(users), 200
     except Exception as e:
@@ -564,19 +525,50 @@ def listar_usuarios():
 # ------------------------
 # Editar um usuário existente
 # ------------------------
-@app.route('/usuario/<int:id>', methods=['PUT'])
-def editar_usuario(id):
-    print(id)
+@app.route('/usuarios/<int:id>', methods=['PUT'])
+def editar_usuario_admin(id):
     data = request.get_json()
-    nome_completo = data.get('nome')
-    telefone = data.get('telefone')
+    
+    # Campos que podem ser atualizados
+    nome_completo = data.get('nome_completo')
     email = data.get('email')
-    senha = data.get('senha')
-    data_nascimento = data.get('data_nascimento')
+    telefone = data.get('telefone')
     cpf = data.get('cpf')
+    data_nascimento = data.get('data_nascimento')
+    ativo = data.get('ativo')
+    senha = data.get('senha')  # ⚡ Adicionar senha
 
-    if not all([nome_completo, telefone, email, senha, data_nascimento, cpf]):
-        return jsonify({'error': 'Todos os campos são obrigatórios'}), 400
+    # Monta UPDATE dinamicamente
+    campos = []
+    valores = []
+
+    if nome_completo is not None:
+        campos.append("nome_completo=%s")
+        valores.append(nome_completo)
+    if email is not None:
+        campos.append("email=%s")
+        valores.append(email)
+    if telefone is not None:
+        campos.append("telefone=%s")
+        valores.append(telefone)
+    if cpf is not None:
+        campos.append("cpf=%s")
+        valores.append(cpf)
+    if data_nascimento is not None:
+        campos.append("data_nascimento=%s")
+        valores.append(data_nascimento)
+    if ativo is not None:
+        campos.append("ativo=%s")
+        valores.append(ativo)
+    # ⚡ Adicionar senha apenas se fornecida e não vazia
+    if senha is not None and senha.strip() != '':
+        campos.append("senha=%s")
+        valores.append(senha)
+
+    if not campos:
+        return jsonify({'error': 'Nenhum campo para atualizar'}), 400
+
+    valores.append(id)
 
     conn = get_connection()
     if conn is None:
@@ -584,17 +576,17 @@ def editar_usuario(id):
 
     cursor = conn.cursor()
     try:
-        cursor.execute("""
-            UPDATE usuario SET
-                nome_completo=%s,
-                telefone=%s,
-                email=%s,
-                senha=%s,
-                data_nascimento=%s,
-                cpf=%s
+        cursor.execute(f"""
+            UPDATE usuario 
+            SET {', '.join(campos)}
             WHERE idUsuario=%s
-        """, (nome_completo, telefone, email, senha, data_nascimento, cpf, id))
+        """, tuple(valores))
+        
         conn.commit()
+        
+        if cursor.rowcount == 0:
+            return jsonify({'error': 'Usuário não encontrado'}), 404
+            
         return jsonify({'message': 'Usuário atualizado com sucesso!'}), 200
     except Exception as e:
         conn.rollback()
@@ -672,14 +664,35 @@ def buscar_cliente(cpf):
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
-        query = "SELECT nome_completo, email, senha, cpf, telefone, data_nascimento, ativo FROM usuario WHERE cpf=%s"
-        cursor.execute(query, (cpf,))
+        
+        # Remove formatação do CPF
+        cpf_limpo = cpf.replace('.', '').replace('-', '').strip()
+        
+        print(f"🔍 Buscando CPF: {cpf_limpo}")  # Debug
+        
+        # ⚡ INCLUIR idUsuario na query
+        query = """SELECT idUsuario, nome_completo, email, senha, cpf, telefone, 
+                   data_nascimento, ativo FROM usuario WHERE cpf=%s"""
+        cursor.execute(query, (cpf_limpo,))
         cliente = cursor.fetchone()
+        
         if cliente:
-            return jsonify({'cliente': cliente}), 200
+            print(f"✅ Cliente encontrado: {cliente}")  # Debug
+            
+            # Formatar data se for objeto date
+            if cliente.get('data_nascimento'):
+                data_nasc = cliente['data_nascimento']
+                if hasattr(data_nasc, 'strftime'):
+                    cliente['data_nascimento'] = data_nasc.strftime('%Y-%m-%d')
+            
+            # ⚡ Retornar objeto direto (sem envolver em 'cliente')
+            return jsonify(cliente), 200
         else:
+            print(f"❌ Cliente não encontrado")  # Debug
             return jsonify({'error': 'Cliente não encontrado'}), 404
-    except Error as e:
+            
+    except Exception as e:
+        print(f"❌ Erro na busca: {str(e)}")  # Debug
         return jsonify({'error': str(e)}), 500
     finally:
         if cursor:
@@ -1455,8 +1468,6 @@ def adicionar_cartao():
     return jsonify({"mensagem": "Cartão adicionado", "id": card_id})
 
 
-
-
 # ==========================
 # 5. Confirmar Pagamento
 # ==========================
@@ -1531,8 +1542,11 @@ def listar_pedidos_usuario(usuario_id):
     conn.close()
     return jsonify(pedidos)
 
-#=================================================================================================================================================================================
-# GET - Listar todos os relatórios de pedidos
+
+#=============================================================
+# GET - Listar todos os relatórios de pedidos - Administrador
+#===============================================
+
 @app.route('/relatorios_pedidos', methods=['GET'])
 def listar_relatorios():
     conn = get_connection()
@@ -1584,6 +1598,62 @@ def atualizar_status(id_relatorio):
 
     return jsonify({"mensagem": "Status atualizado com sucesso"}), 200
 
+#=============================================================
+# Cancelar Pedido (atualiza status para cancelado) - Usuário
+#=============================================================
+@app.route('/cancelar_pedido/<int:pedido_id>', methods=['POST'])
+def cancelar_pedido(pedido_id):
+    try:
+        conn = get_connection()
+        if conn is None:
+            return jsonify({'error': 'Não foi possível conectar ao banco de dados'}), 500
+
+        cursor = conn.cursor(dictionary=True)
+
+        # 1️⃣ Verifica se o pedido existe e se está em status "Realizado"
+        cursor.execute("""
+            SELECT idRelatorio_Pedido, status 
+            FROM relatorio_pedido 
+            WHERE idRelatorio_Pedido = %s
+        """, (pedido_id,))
+        
+        pedido = cursor.fetchone()
+
+        if not pedido:
+            return jsonify({'error': 'Pedido não encontrado'}), 404
+
+        if pedido['status'].lower() != 'realizado':
+            return jsonify({'error': 'Apenas pedidos com status "Realizado" podem ser cancelados'}), 400
+
+        # 2️⃣ Atualiza o status para "Cancelado"
+        cursor.execute("""
+            UPDATE relatorio_pedido 
+            SET status = 'Cancelado', data_status = NOW()
+            WHERE idRelatorio_Pedido = %s
+        """, (pedido_id,))
+
+        conn.commit()
+
+        # 3️⃣ Verifica se foi atualizado
+        if cursor.rowcount == 0:
+            return jsonify({'error': 'Erro ao cancelar o pedido'}), 500
+
+        return jsonify({
+            'message': 'Pedido cancelado com sucesso!',
+            'pedido_id': pedido_id,
+            'novo_status': 'Cancelado'
+        }), 200
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        return jsonify({'error': f'Erro ao cancelar pedido: {str(e)}'}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 #=====================================================================================================================================================================================
 #                                                                                    Rota IP 
@@ -1592,8 +1662,8 @@ def atualizar_status(id_relatorio):
 # Rota Home
 # ------------------------
 if __name__ == '__main__':
-    #app.run(host='0.0.0.0', port=8080, debug=True) # Online
-    app.run(host='0.0.0.0', port=5000, debug=True) # Local
+    app.run(host='0.0.0.0', port=5000, debug=True)
+    #app.run(host='0.0.0.0', port=8080, debug=True)
 #-----------------------------
 # Teste
 #-----------------------------
