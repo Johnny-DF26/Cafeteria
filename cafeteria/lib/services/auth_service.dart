@@ -109,4 +109,44 @@ class AuthService {
     final data = jsonDecode(response.body);
     throw AuthException(data['error'] ?? 'Erro ao enviar email de recuperação');
   }
+
+/// Reset de senha com Email + CPF + Data de Nascimento
+Future<void> resetPassword({
+  required String email,
+  required String cpf,
+  required String birthDate,
+  required String newPassword,
+}) async {
+  try {
+    print('[DEBUG] Enviando: email=$email, cpf=$cpf, data=$birthDate');
+    
+    final response = await http.post(
+      Uri.parse('$baseUrl/reset_password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'cpf': cpf,
+        'data_nascimento': birthDate,
+        'nova_senha': newPassword,
+      }),
+    );
+
+    print('[DEBUG] Status: ${response.statusCode}');
+    print('[DEBUG] Body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      return;
+    } else if (response.statusCode == 403 || response.statusCode == 401 || response.statusCode == 404) {
+      final data = jsonDecode(response.body);
+      throw AuthException(data['error'] ?? 'Erro ao redefinir senha');
+    } else {
+      final data = jsonDecode(response.body);
+      throw AuthException(data['error'] ?? 'Erro ao redefinir senha');
+    }
+  } catch (e) {
+    print('[ERRO] $e');
+    if (e is AuthException) rethrow;
+    throw AuthException('Erro de conexão: $e');
+  }
+}
 }

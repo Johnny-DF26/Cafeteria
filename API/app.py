@@ -388,6 +388,117 @@ def update_password(user_id):
         conn.close()
 
 
+
+# ------------------------
+# Reset de Senha (Email + CPF + Data de Nascimento) com limite de tentativas
+# ------------------------
+
+# Dicionário para controlar tentativas (em produção use Redis ou banco)
+tentativas_reset = {}
+
+@app.route('/reset_password', methods=['POST'])
+def reset_password():
+    data = request.get_json()
+    
+    email = data.get('email')
+    cpf = data.get('cpf')
+    data_nascimento = data.get('data_nascimento')
+    nova_senha = data.get('nova_senha')
+
+    # Validações
+    if not all([email, cpf, data_nascimento, nova_senha]):
+        return jsonify({'error': 'Email, CPF, data de nascimento e nova senha são obrigatórios'}), 400
+
+    if len(nova_senha) < 6:
+        return jsonify({'error': 'A senha deve ter pelo menos 6 caracteres'}), 400
+
+    conn = get_connection()
+    if conn is None:
+        return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
+
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        # 1. Verifica se o usuário existe e está ativo
+        cursor.execute("""
+            SELECT idUsuario, nome_completo, email, ativo 
+            FROM usuario 
+            WHERE email = %s
+        """, (email,))
+        
+        usuario = cursor.fetchone()
+
+        if not usuario:
+            return jsonify({'error': 'Usuário não encontrado'}), 404
+
+        # 2. Verifica se a conta está bloqueada
+        if usuario['ativo'] == 0:
+            return jsonify({'error': 'Conta bloqueada por excesso de tentativas. Entre em contato com o suporte.'}), 403
+
+        # 3. Inicializa contador de tentativas para este email
+        if email not in tentativas_reset:
+            tentativas_reset[email] = 0
+
+        # 4. Verifica se CPF e data de nascimento conferem
+        cursor.execute("""
+            SELECT idUsuario, nome_completo, email 
+            FROM usuario 
+            WHERE email = %s AND cpf = %s AND data_nascimento = %s AND ativo = 1
+        """, (email, cpf, data_nascimento))
+        
+        usuario_validado = cursor.fetchone()
+
+        if not usuario_validado:
+            # Incrementa tentativas
+            tentativas_reset[email] += 1
+            tentativas_restantes = 5 - tentativas_reset[email]
+
+            # Se atingiu 5 tentativas, bloqueia a conta
+            if tentativas_reset[email] >= 5:
+                cursor.execute("""
+                    UPDATE usuario 
+                    SET ativo = 0
+                    WHERE email = %s
+                """, (email,))
+                conn.commit()
+                
+                return jsonify({
+                    'error': '❌ Conta bloqueada por excesso de tentativas inválidas. Entre em contato com o suporte.'
+                }), 403
+
+            return jsonify({
+                'error': f'Dados incorretos. Você tem {tentativas_restantes} tentativa(s) restante(s).'
+            }), 401
+
+        # 5. Dados corretos - Atualiza a senha e reseta tentativas
+        cursor.execute("""
+            UPDATE usuario 
+            SET senha = %s, data_ultimo_acesso = NOW()
+            WHERE idUsuario = %s
+        """, (nova_senha, usuario_validado['idUsuario']))
+        
+        conn.commit()
+
+        # Remove do controle de tentativas
+        if email in tentativas_reset:
+            del tentativas_reset[email]
+
+        return jsonify({
+            'message': '✅ Senha alterada com sucesso!',
+            'usuario': {
+                'nome': usuario_validado['nome_completo'],
+                'email': usuario_validado['email']
+            }
+        }), 200
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': f'Erro ao redefinir senha: {str(e)}'}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+
 # ===================================================================================================================================================================================
 #                                                                   Gerenciamento de usuários -- Administrador
 # ===================================================================================================================================================================================

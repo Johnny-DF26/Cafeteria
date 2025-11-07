@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'edit_user_screen.dart';
 
 String get baseUrl => GlobalConfig.GlobalConfig.api();
+
 class BuscarClienteScreen extends StatefulWidget {
   const BuscarClienteScreen({super.key});
 
@@ -30,8 +31,6 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
 
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
-
-  //final String baseUrl = 'http://192.168.0.167:5000'; // coloque seu IP
 
   @override
   void initState() {
@@ -70,27 +69,14 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
     try {
       final cpfLimpo = maskFormatter.getUnmaskedText();
       
-      debugPrint('=== BUSCAR CLIENTE ===');
-      debugPrint('CPF: $cpfLimpo');
-      debugPrint('URL: $baseUrl/cliente/$cpfLimpo');
-      
       final response = await http.get(
         Uri.parse('$baseUrl/cliente/$cpfLimpo'),
         headers: {'Content-Type': 'application/json'},
       );
 
-      debugPrint('Status: ${response.statusCode}');
-      debugPrint('Body: ${response.body}');
-      debugPrint('======================');
-
       if (response.statusCode == 200) {
-        // ⚡ API agora retorna objeto direto, não dentro de 'cliente'
         final data = json.decode(response.body);
         
-        debugPrint('Dados recebidos: $data');
-        debugPrint('idUsuario: ${data['idUsuario']}');
-        
-        // Verifica se tem idUsuario
         if (data['idUsuario'] == null) {
           setState(() => _mensagemCard = 'Erro: Cliente sem ID válido.');
           return;
@@ -104,7 +90,6 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
         setState(() => _mensagemCard = data['error'] ?? 'Erro ao buscar cliente.');
       }
     } catch (e) {
-      debugPrint('❌ Erro na busca: $e');
       setState(() => _mensagemCard = 'Erro de conexão: $e');
     } finally {
       setState(() => _loading = false);
@@ -116,16 +101,33 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Confirmação'),
-        content: Text('Excluir cliente ${_cliente!['cpf']}?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Confirmação',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'Excluir cliente ${_cliente!['cpf']}?',
+          style: GoogleFonts.poppins(),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar')),
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancelar',
+              style: GoogleFonts.poppins(color: Colors.grey.shade700),
+            ),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Excluir'),
+            child: Text(
+              'Excluir',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -168,7 +170,6 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
     try {
       // Fallback: extrai a data manualmente do formato GMT
       if (dataStr.contains('GMT') || dataStr.contains(',')) {
-        // Extrai: "Wed, 07 Oct 1998 00:00:00 GMT"
         final parts = dataStr.split(',')[1].trim().split(' ');
         if (parts.length >= 3) {
           final dia = int.parse(parts[0]);
@@ -209,7 +210,6 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
       
       return dataStr;
     } catch (e) {
-      debugPrint('Erro ao formatar data: $dataStr - $e');
       return dataStr;
     }
   }
@@ -234,10 +234,8 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
     final numeros = telefone.replaceAll(RegExp(r'[^0-9]'), '');
     
     if (numeros.length == 11) {
-      // Celular: (11) 98765-4321
       return '(${numeros.substring(0, 2)}) ${numeros.substring(2, 7)}-${numeros.substring(7)}';
     } else if (numeros.length == 10) {
-      // Fixo: (11) 3456-7890
       return '(${numeros.substring(0, 2)}) ${numeros.substring(2, 6)}-${numeros.substring(6)}';
     }
     return telefone;
@@ -253,10 +251,6 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
         backgroundColor: Colors.brown.shade700,
         automaticallyImplyLeading: false,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
         title: Text(
           "Café Gourmet",
           style: GoogleFonts.pacifico(
@@ -500,7 +494,6 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
                             builder: (context) => EditUserScreen(cliente: _cliente!),
                           ),
                         ).then((_) {
-                          // Atualiza os dados após editar
                           if (_cpfCtrl.text.isNotEmpty) {
                             buscarCliente();
                           }

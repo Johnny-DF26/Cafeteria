@@ -244,7 +244,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             TextButton(
                               onPressed: () => Navigator.pushNamed(
-                                  context, Routes.forgotPassword),
+                                  context, Routes.resetPassword),
                               child: const Text(
                                 'Esqueci a senha',
                                 style: TextStyle(
