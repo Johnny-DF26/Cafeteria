@@ -444,9 +444,51 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Erro ao salvar pedido!"), backgroundColor: Colors.red,),
-      );
+      // Erro: pode ser estoque insuficiente
+    final data = jsonDecode(response.body);
+    final errorMsg = data['erro'] ?? 'Erro ao processar pagamento';
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red.shade700, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Pagamento não realizado',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.red.shade700,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          errorMsg,
+          style: GoogleFonts.poppins(
+            color: Colors.grey.shade800,
+            fontSize: 15,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'OK',
+              style: GoogleFonts.poppins(
+                color: Colors.brown.shade700,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
     }
   }
 

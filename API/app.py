@@ -1474,7 +1474,6 @@ def adicionar_cartao():
 @app.route("/criar_pedido", methods=["POST"])
 def criar_pedido():
     data = request.json
-    print(data)
     usuario_id = data["usuario_id"]
     endereco = data.get("endereco") 
     valor_total = data["valor_total"]
@@ -1482,14 +1481,36 @@ def criar_pedido():
     valor_desconto = data.get("valor_desconto", 0)
     cupom_codigo = data.get("cupom_codigo")
     pagamento = data["pagamento"]
-
     observacao = data.get("observacao")
     status = "Realizado"
 
     conn = get_connection()
     cur = conn.cursor()
-    print(endereco)
-    # cria o pedido
+
+    # Verifica o estoque e a quantidade de cada produto
+    for item in data["items"]:
+        # Validação de quantidade
+        if item["quantity"] is None or item["quantity"] <= 0:
+            cur.close()
+            conn.close()
+            return jsonify({
+                "erro": f"Quantidade inválida para '{item.get('nome', 'produto')}'. Selecione ao menos 1 unidade."
+            }), 400
+
+        # Verificação de estoque
+        cur.execute("""
+            SELECT quantidade_estoque, nome FROM produtos WHERE idProdutos = %s
+        """, (item["id"],))
+        result = cur.fetchone()
+        if not result or result[0] < item["quantity"]:
+            nome_produto = result[1] if result else "Produto desconhecido"
+            cur.close()
+            conn.close()
+            return jsonify({
+                "erro": f"Estoque insuficiente para '{nome_produto}'. Disponível: {result[0] if result else 0}"
+            }), 400
+
+    # Se passou nas validações, cria o pedido normalmente
     cur.execute("""
         INSERT INTO relatorio_pedido
         (Usuario_idUsuario, endereco, valor_total, valor_frete, valor_desconto, cupom_codigo, status, observacao, tipo_pagamento)
@@ -1497,7 +1518,6 @@ def criar_pedido():
     """, (usuario_id, endereco, valor_total, valor_frete, valor_desconto, cupom_codigo, status, observacao, pagamento))
 
     pedido_id = cur.lastrowid
-    # agora salvamos cada item do pedido
     for item in data["items"]:
         cur.execute("""
             INSERT INTO relatorio_pedido_produto
@@ -1594,6 +1614,22 @@ def atualizar_status(id_relatorio):
         SET status = %s
         WHERE idRelatorio_Pedido = %s""", 
         (novo_status, id_relatorio))
+
+    # Só atualiza o estoque se o status for "Entregue"
+    if novo_status.lower() == "entregue":
+        # Busca os produtos do pedido
+        cursor.execute("""
+            SELECT Produto_id, quantidade
+            FROM relatorio_pedido_produto
+            WHERE Relatorio_Pedido_id = %s
+        """, (id_relatorio,))
+        produtos = cursor.fetchall()
+        for produto_id, quantidade in produtos:
+            cursor.execute("""
+                UPDATE produtos
+                SET quantidade_estoque = quantidade_estoque - %s
+                WHERE idProdutos = %s AND quantidade_estoque >= %s
+            """, (quantidade, produto_id, quantidade))
 
     conn.commit()
     cursor.close()

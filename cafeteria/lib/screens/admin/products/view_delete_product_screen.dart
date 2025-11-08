@@ -21,6 +21,8 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
   List<Map<String, dynamic>> produtosFiltrados = [];
   bool carregando = false;
   final TextEditingController idController = TextEditingController();
+  String? categoriaSelecionada;
+  List<String> categorias = [];
 
   @override
   void initState() {
@@ -43,6 +45,16 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
         setState(() {
           produtos = List<Map<String, dynamic>>.from(data['produtos']);
           produtosFiltrados = List.from(produtos);
+          categorias = produtos
+              .map((p) => (p['categoria'] ?? '').toString().trim())
+              .where((c) => c.isNotEmpty)
+              .toSet()
+              .toList();
+          categorias.sort();
+          // Valor inicial do filtro
+          if (!categorias.contains(categoriaSelecionada)) {
+            categoriaSelecionada = '';
+          }
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -116,17 +128,32 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
     }
   }
 
-  void filtrarPorId() {
+  void aplicarFiltros() {
     final idText = idController.text.trim();
-    if (idText.isEmpty) {
-      setState(() => produtosFiltrados = List.from(produtos));
-      return;
-    }
     final id = int.tryParse(idText);
-    if (id == null) return;
 
-    final filtrado = produtos.where((p) => p['idProdutos'] == id).toList();
-    setState(() => produtosFiltrados = filtrado);
+    setState(() {
+      produtosFiltrados = produtos.where((p) {
+        final categoriaOk = (categoriaSelecionada == null || categoriaSelecionada!.isEmpty)
+            ? true
+            : p['categoria'] == categoriaSelecionada;
+        final idOk = (idText.isEmpty)
+            ? true
+            : p['idProdutos'] == id;
+        return categoriaOk && idOk;
+      }).toList();
+    });
+  }
+
+  void filtrarPorId() {
+    aplicarFiltros();
+  }
+
+  void filtrarPorCategoria(String? categoria) {
+    setState(() {
+      categoriaSelecionada = categoria ?? '';
+      aplicarFiltros();
+    });
   }
 
   void abrirEdicao(Map<String, dynamic> produto) {
@@ -316,12 +343,12 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
             pinned: true,
             backgroundColor: Colors.brown.shade700,
             expandedHeight: 100,
-            automaticallyImplyLeading: true,
+            automaticallyImplyLeading: false,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
               title: Text(
-                'Cafe Gourmet',
+                'Café Gourmet',
                 style: GoogleFonts.pacifico(
                   fontSize: 30,
                   color: Colors.white,
@@ -416,7 +443,10 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                           ElevatedButton(
                             onPressed: () {
                               idController.clear();
-                              filtrarPorId();
+                              setState(() {
+                                categoriaSelecionada = '';
+                              });
+                              buscarProdutos();
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.grey.shade600,
@@ -436,6 +466,56 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  // Filtro por categoria
+                  if (categorias.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: DropdownButtonFormField<String>(
+                        value: categoriaSelecionada ?? '',
+                        isExpanded: true,
+                        icon: Icon(Icons.arrow_drop_down_circle, color: Colors.brown.shade700, size: 28),
+                        items: [
+                          const DropdownMenuItem(
+                            value: '',
+                            child: Text('Todas as categorias'),
+                          ),
+                          ...categorias.map((cat) => DropdownMenuItem(
+                            value: cat,
+                            child: Row(
+                              children: [
+                                Icon(Icons.local_offer, color: Colors.brown.shade400, size: 18),
+                                const SizedBox(width: 8),
+                                Text(cat, style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+                              ],
+                            ),
+                          )),
+                        ],
+                        onChanged: filtrarPorCategoria,
+                        decoration: InputDecoration(
+                          labelText: 'Filtrar por categoria',
+                          labelStyle: GoogleFonts.poppins(color: Colors.brown.shade700, fontWeight: FontWeight.w600),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide(color: Colors.brown.shade300, width: 2),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide(color: Colors.brown.shade300, width: 2),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
+                          ),
+                          prefixIcon: Icon(Icons.category, color: Colors.brown.shade700),
+                          filled: true,
+                          fillColor: Colors.brown.shade50,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        ),
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.w500, color: Colors.brown.shade900),
+                        dropdownColor: Colors.brown.shade50,
+                      ),
+                    ),
 
                   // Lista de produtos
                   carregando
@@ -475,10 +555,10 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                               itemBuilder: (_, index) {
                                 final produto = produtosFiltrados[index];
                                 return Card(
-                                  margin: const EdgeInsets.only(bottom: 16),
-                                  elevation: 3,
+                                  margin: const EdgeInsets.only(bottom: 10), // Menor espaçamento entre cards
+                                  elevation: 2,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(12), // Menor raio
                                   ),
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,45 +566,42 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                                       // Imagem do produto
                                       ClipRRect(
                                         borderRadius: const BorderRadius.vertical(
-                                          top: Radius.circular(16),
+                                          top: Radius.circular(12),
                                         ),
-                                        child: produto['imagem'] != null &&
-                                                produto['imagem'].isNotEmpty
+                                        child: produto['imagem'] != null && produto['imagem'].isNotEmpty
                                             ? Image.asset(
                                                 produto['imagem'],
                                                 width: double.infinity,
-                                                height: 200,
+                                                height: 100, // Altura reduzida
                                                 fit: BoxFit.cover,
-                                                errorBuilder: (_, __, ___) =>
-                                                    Container(
+                                                errorBuilder: (_, __, ___) => Container(
                                                   width: double.infinity,
-                                                  height: 200,
+                                                  height: 100,
                                                   color: Colors.brown.shade100,
                                                   child: Icon(
                                                     Icons.broken_image,
                                                     color: Colors.brown.shade400,
-                                                    size: 50,
+                                                    size: 40,
                                                   ),
                                                 ),
                                               )
                                             : Container(
                                                 width: double.infinity,
-                                                height: 200,
+                                                height: 100,
                                                 color: Colors.brown.shade100,
                                                 child: Icon(
                                                   Icons.image,
                                                   color: Colors.brown.shade400,
-                                                  size: 50,
+                                                  size: 40,
                                                 ),
                                               ),
                                       ),
 
                                       // Informações do produto
                                       Padding(
-                                        padding: const EdgeInsets.all(16),
+                                        padding: const EdgeInsets.all(10), // Menor padding
                                         child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Row(
                                               children: [
@@ -533,25 +610,24 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                                                     produto['nome'] ?? 'Sem nome',
                                                     style: GoogleFonts.poppins(
                                                       fontWeight: FontWeight.w600,
-                                                      fontSize: 18,
+                                                      fontSize: 15, // Fonte menor
                                                       color: Colors.brown.shade900,
                                                     ),
                                                   ),
                                                 ),
                                                 Container(
                                                   padding: const EdgeInsets.symmetric(
-                                                    horizontal: 12,
-                                                    vertical: 6,
+                                                    horizontal: 8,
+                                                    vertical: 4,
                                                   ),
                                                   decoration: BoxDecoration(
                                                     color: Colors.brown.shade100,
-                                                    borderRadius:
-                                                        BorderRadius.circular(20),
+                                                    borderRadius: BorderRadius.circular(14),
                                                   ),
                                                   child: Text(
                                                     'ID: ${produto['idProdutos']}',
                                                     style: GoogleFonts.poppins(
-                                                      fontSize: 12,
+                                                      fontSize: 10,
                                                       fontWeight: FontWeight.w500,
                                                       color: Colors.brown.shade700,
                                                     ),
@@ -559,151 +635,183 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                                                 ),
                                               ],
                                             ),
-                                            const SizedBox(height: 8),
+                                            const SizedBox(height: 4),
                                             Text(
                                               produto['descricao'] ?? 'Sem descrição',
                                               style: GoogleFonts.poppins(
-                                                fontSize: 14,
+                                                fontSize: 12,
                                                 color: Colors.grey.shade700,
                                               ),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            const SizedBox(height: 12),
+                                            const SizedBox(height: 8),
                                             Row(
                                               children: [
                                                 Icon(
                                                   Icons.category,
-                                                  size: 16,
+                                                  size: 14,
                                                   color: Colors.grey.shade600,
                                                 ),
-                                                const SizedBox(width: 6),
+                                                const SizedBox(width: 4),
                                                 Text(
                                                   produto['categoria'] ?? 'Sem categoria',
                                                   style: GoogleFonts.poppins(
-                                                    fontSize: 13,
+                                                    fontSize: 11,
                                                     color: Colors.grey.shade700,
                                                   ),
                                                 ),
-                                                const SizedBox(width: 20),
+                                                const SizedBox(width: 12),
                                                 Icon(
                                                   Icons.inventory,
-                                                  size: 16,
+                                                  size: 14,
                                                   color: Colors.grey.shade600,
                                                 ),
-                                                const SizedBox(width: 6),
+                                                const SizedBox(width: 4),
                                                 Text(
                                                   'Estoque: ${produto['quantidade_estoque'] ?? 0}',
                                                   style: GoogleFonts.poppins(
-                                                    fontSize: 13,
-                                                    color: Colors.grey.shade700,
+                                                    fontSize: 11,
+                                                    color: (produto['quantidade_estoque'] ?? 0) <= 5
+                                                        ? Colors.red.shade700
+                                                        : Colors.grey.shade700,
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                            const SizedBox(height: 12),
+                                            // ALERTA DE ESTOQUE BAIXO/CRÍTICO
+                                            if ((produto['quantidade_estoque'] ?? 0) <= 5)
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 4, left: 0, right: 0),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.red.shade50,
+                                                    borderRadius: BorderRadius.circular(10),
+                                                    border: Border.all(color: Colors.red.shade200, width: 1),
+                                                  ),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 20),
+                                                      const SizedBox(width: 6),
+                                                      Text(
+                                                        'Estoque crítico!',
+                                                        style: GoogleFonts.poppins(
+                                                          color: Colors.red.shade700,
+                                                          fontSize: 12,
+                                                          fontWeight: FontWeight.w700,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              )
+                                            else if ((produto['quantidade_estoque'] ?? 0) < 10)
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 4, left: 0, right: 0),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.orange.shade50,
+                                                    borderRadius: BorderRadius.circular(10),
+                                                    border: Border.all(color: Colors.orange.shade200, width: 1),
+                                                  ),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 20),
+                                                      const SizedBox(width: 6),
+                                                      Text(
+                                                        'Estoque baixo!',
+                                                        style: GoogleFonts.poppins(
+                                                          color: Colors.orange.shade700,
+                                                          fontSize: 12,
+                                                          fontWeight: FontWeight.w700,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            const SizedBox(height: 8),
                                             Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.spaceBetween,
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
                                                 Text(
-                                                  'R\$ ${produto['valor']?.toStringAsFixed(2) ?? '0.00'}',
+                                                  'R\$ ${(produto['valor'] ?? 0).toStringAsFixed(2).replaceAll('.', ',')}',
                                                   style: GoogleFonts.poppins(
                                                     fontWeight: FontWeight.w700,
-                                                    fontSize: 20,
+                                                    fontSize: 15,
                                                     color: Colors.green.shade700,
                                                   ),
                                                 ),
                                                 Row(
                                                   children: [
                                                     // Botão editar
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.blue.shade50,
-                                                        borderRadius:
-                                                            BorderRadius.circular(10),
-                                                      ),
-                                                      child: IconButton(
-                                                        icon: Icon(
-                                                          Icons.edit,
-                                                          color: Colors.blue.shade700,
+                                                    Material(
+                                                      color: Colors.blue.shade50,
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      child: InkWell(
+                                                        borderRadius: BorderRadius.circular(8),
+                                                        onTap: () => abrirEdicao(produto),
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.all(8),
+                                                          child: Icon(
+                                                            Icons.edit,
+                                                            color: Colors.blue.shade700,
+                                                            size: 22,
+                                                          ),
                                                         ),
-                                                        onPressed: () =>
-                                                            abrirEdicao(produto),
                                                       ),
                                                     ),
-                                                    const SizedBox(width: 8),
+                                                    const SizedBox(width: 10),
                                                     // Botão excluir
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.red.shade50,
-                                                        borderRadius:
-                                                            BorderRadius.circular(10),
-                                                      ),
-                                                      child: IconButton(
-                                                        icon: Icon(
-                                                          Icons.delete,
-                                                          color: Colors.red.shade700,
-                                                        ),
-                                                        onPressed: () {
+                                                    Material(
+                                                      color: Colors.red.shade50,
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      child: InkWell(
+                                                        borderRadius: BorderRadius.circular(8),
+                                                        onTap: () {
                                                           showDialog(
                                                             context: context,
                                                             builder: (_) => AlertDialog(
-                                                              shape:
-                                                                  RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(16),
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius: BorderRadius.circular(12),
                                                               ),
                                                               title: Text(
                                                                 'Excluir Produto',
-                                                                style: GoogleFonts
-                                                                    .poppins(
-                                                                  fontWeight:
-                                                                      FontWeight.w600,
+                                                                style: GoogleFonts.poppins(
+                                                                  fontWeight: FontWeight.w600,
                                                                 ),
                                                               ),
                                                               content: Text(
                                                                 'Deseja realmente excluir "${produto['nome']}"?',
-                                                                style: GoogleFonts
-                                                                    .poppins(),
+                                                                style: GoogleFonts.poppins(),
                                                               ),
                                                               actions: [
                                                                 TextButton(
-                                                                  onPressed: () =>
-                                                                      Navigator.pop(
-                                                                          context),
+                                                                  onPressed: () => Navigator.pop(context),
                                                                   child: Text(
                                                                     'Cancelar',
-                                                                    style: GoogleFonts
-                                                                        .poppins(
-                                                                      color: Colors
-                                                                          .grey
-                                                                          .shade700,
+                                                                    style: GoogleFonts.poppins(
+                                                                      color: Colors.grey.shade700,
                                                                     ),
                                                                   ),
                                                                 ),
                                                                 ElevatedButton(
-                                                                  style: ElevatedButton
-                                                                      .styleFrom(
-                                                                    backgroundColor:
-                                                                        Colors.red
-                                                                            .shade700,
-                                                                    foregroundColor:
-                                                                        Colors.white,
+                                                                  style: ElevatedButton.styleFrom(
+                                                                    backgroundColor: Colors.red.shade700,
+                                                                    foregroundColor: Colors.white,
                                                                   ),
                                                                   onPressed: () {
-                                                                    Navigator.pop(
-                                                                        context);
-                                                                    deletarProduto(
-                                                                        produto[
-                                                                            'idProdutos']);
+                                                                    Navigator.pop(context);
+                                                                    deletarProduto(produto['idProdutos']);
                                                                   },
                                                                   child: Text(
                                                                     'Excluir',
-                                                                    style: GoogleFonts
-                                                                        .poppins(
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w600,
+                                                                    style: GoogleFonts.poppins(
+                                                                      fontWeight: FontWeight.w600,
                                                                     ),
                                                                   ),
                                                                 ),
@@ -711,6 +819,14 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                                                             ),
                                                           );
                                                         },
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.all(8),
+                                                          child: Icon(
+                                                            Icons.delete,
+                                                            color: Colors.red.shade700,
+                                                            size: 22,
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ],

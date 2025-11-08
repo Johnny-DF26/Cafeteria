@@ -24,6 +24,7 @@ dependencies:
   http_parser: ^4.0.2
   flutter_localizations:
     sdk: flutter
+  dropdown_button2: ^2.3.9
 
 dev_dependencies:
   flutter_test:

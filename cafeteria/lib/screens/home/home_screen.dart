@@ -197,8 +197,9 @@ class _HomeScreenState extends State<HomeScreen> {
         final data = rawData.map((e) => Map<String, dynamic>.from(e)).toList();
         if (mounted) {
           setState(() {
-            promoItems = data.where((item) => item['is_promotion'] == 1).toList();
-            recommendItems = data;
+            // Filtra apenas produtos com estoque > 0
+            promoItems = data.where((item) => item['is_promotion'] == 1 && (item['quantidade_estoque'] ?? 0) > 0).toList();
+            recommendItems = data.where((item) => (item['quantidade_estoque'] ?? 0) > 0).toList();
           });
         }
       }
@@ -233,9 +234,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final userData = userProvider.userData;
     final userId = userData?['id'];
     final screenWidth = MediaQuery.of(context).size.width;
-    final filteredItems = selectedCategory == "Todos"
-        ? recommendItems
-        : recommendItems.where((item) => item['categoria'] == selectedCategory).toList();
+    final filteredItems = (selectedCategory == "Todos"
+    ? recommendItems
+    : recommendItems.where((item) => item['categoria'] == selectedCategory).toList())
+    .where((item) => (item['quantidade_estoque'] ?? 0) > 0).toList();
+    //print(recommendItems.map((e) => '${e['nome']}: ${e['quantidade_estoque']}').toList());
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -317,14 +320,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+                // ...existing code...
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildCategoryRow(screenWidth),
-                        const SizedBox(height: 28),
                         if (promoItems.isNotEmpty) ...[
                           _buildPromoCarousel(
                             title: "🔥 Promoções Especiais",
@@ -332,8 +334,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             userId: userId,
                             screenWidth: screenWidth,
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 5),
                         ],
+                        // Mova o filtro de categorias para cá
+                        _buildCategoryRow(screenWidth),
+                        const SizedBox(height: 10),
                         _buildHorizontalScrollableSection(
                           title: "☕ Nossos Produtos",
                           controller: _recommendController,
@@ -563,7 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white,
+                          color: const Color.fromARGB(142, 255, 255, 255),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.15),
@@ -733,7 +738,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 14),
           child: Text(
-            "Categorias",
+            "🏷️ Categorias",
             style: GoogleFonts.poppins(
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -872,6 +877,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProductCard(Map<String, dynamic> item, int userId) {
+    if ((item['quantidade_estoque'] ?? 0) <= 0) return const SizedBox.shrink();
+
     final imageUrl = item["imagem"] ?? '';
     final rating = double.tryParse(item["avaliacao"]?.toString() ?? "0") ?? 0;
     final valorNum = double.tryParse((item["valor"] ?? "0").toString().replaceAll(",", ".")) ?? 0;
@@ -927,7 +934,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white,
+                        color: const Color.fromARGB(99, 255, 255, 255),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.15),

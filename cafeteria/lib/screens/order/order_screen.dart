@@ -257,7 +257,7 @@ class _OrderScreenState extends State<OrderScreen> {
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
               title: Text(
-                'Cafe Gourmet',
+                'Café Gourmet',
                 style: GoogleFonts.pacifico(
                   fontSize: 30,
                   color: Colors.white,
