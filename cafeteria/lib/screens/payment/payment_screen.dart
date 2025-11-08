@@ -676,20 +676,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                       Container(
                                         decoration: BoxDecoration(
                                           color: Colors.white,
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(15),
                                           border: Border.all(color: Colors.grey.shade300),
                                         ),
                                         child: Row(
                                           children: [
                                             IconButton(
-                                              icon: const Icon(Icons.remove, size: 16),
+                                              icon: const Icon(Icons.remove, size: 20), // menor
                                               color: Colors.orange.shade700,
                                               onPressed: () => _decreaseItem(item),
-                                              padding: const EdgeInsets.all(4),
-                                              constraints: const BoxConstraints(),
+                                              padding: EdgeInsets.zero, // sem padding extra
+                                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32), // menor área
                                             ),
                                             Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                                              padding: const EdgeInsets.symmetric(horizontal: 2), // menos espaço
                                               child: Text(
                                                 "${item['quantity']}",
                                                 style: GoogleFonts.poppins(
@@ -699,16 +699,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                               ),
                                             ),
                                             IconButton(
-                                              icon: const Icon(Icons.add, size: 16),
+                                              icon: const Icon(Icons.add, size: 20), // menor
                                               color: Colors.green.shade700,
                                               onPressed: () => _increaseItem(item),
-                                              padding: const EdgeInsets.all(4),
-                                              constraints: const BoxConstraints(),
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      const SizedBox(width: 12),
+                                      const SizedBox(width: 8), // menos espaço entre controles e preço
                                       Text(
                                         "R\$ ${price.toStringAsFixed(2).replaceAll('.', ',')} cada",
                                         style: GoogleFonts.poppins(

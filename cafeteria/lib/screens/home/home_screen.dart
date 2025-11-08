@@ -78,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================
-  // API Favoritos
+  // Favoritos
   // ==========================
   Future<void> fetchUserFavorites(int userId) async {
     try {
@@ -187,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ==========================
-  // API Produtos
+  // Produtos
   // ==========================
   Future<void> fetchProdutos() async {
     try {
@@ -241,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
     //print(recommendItems.map((e) => '${e['nome']}: ${e['quantidade_estoque']}').toList());
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: const Color.fromARGB(255, 255, 248, 245),
       body: _isLoading
           ? Center(
               child: Column(
@@ -334,11 +334,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             userId: userId,
                             screenWidth: screenWidth,
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 20),
                         ],
                         // Mova o filtro de categorias para cá
                         _buildCategoryRow(screenWidth),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 20),
+
                         _buildHorizontalScrollableSection(
                           title: "☕ Nossos Produtos",
                           controller: _recommendController,
