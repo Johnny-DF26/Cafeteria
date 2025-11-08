@@ -5,8 +5,6 @@ from datetime import datetime
 from mysql.connector import Error
 from datetime import datetime
 import os
-from datetime import datetime
-import pytz
 
 app = Flask(__name__)
 CORS(app)
@@ -1473,7 +1471,6 @@ def adicionar_cartao():
 # ==========================
 # 5. Confirmar Pagamento
 # ==========================
-
 @app.route("/criar_pedido", methods=["POST"])
 def criar_pedido():
     data = request.json
@@ -1487,15 +1484,12 @@ def criar_pedido():
     observacao = data.get("observacao")
     status = "Realizado"
 
-    # Horário de Brasília
-    brasil = pytz.timezone('America/Sao_Paulo')
-    data_status = datetime.now(brasil).strftime('%Y-%m-%d %H:%M:%S')
-
     conn = get_connection()
     cur = conn.cursor()
 
     # Verifica o estoque e a quantidade de cada produto
     for item in data["items"]:
+        # Validação de quantidade
         if item["quantity"] is None or item["quantity"] <= 0:
             cur.close()
             conn.close()
@@ -1503,6 +1497,7 @@ def criar_pedido():
                 "erro": f"Quantidade inválida para '{item.get('nome', 'produto')}'. Selecione ao menos 1 unidade."
             }), 400
 
+        # Verificação de estoque
         cur.execute("""
             SELECT quantidade_estoque, nome FROM produtos WHERE idProdutos = %s
         """, (item["id"],))
@@ -1515,12 +1510,12 @@ def criar_pedido():
                 "erro": f"Estoque insuficiente para '{nome_produto}'. Disponível: {result[0] if result else 0}"
             }), 400
 
-    # Insere o pedido com data_status correta
+    # Se passou nas validações, cria o pedido normalmente
     cur.execute("""
         INSERT INTO relatorio_pedido
-        (Usuario_idUsuario, endereco, valor_total, valor_frete, valor_desconto, cupom_codigo, status, observacao, tipo_pagamento, data_status)
-        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-    """, (usuario_id, endereco, valor_total, valor_frete, valor_desconto, cupom_codigo, status, observacao, pagamento, data_status))
+        (Usuario_idUsuario, endereco, valor_total, valor_frete, valor_desconto, cupom_codigo, status, observacao, tipo_pagamento)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    """, (usuario_id, endereco, valor_total, valor_frete, valor_desconto, cupom_codigo, status, observacao, pagamento))
 
     pedido_id = cur.lastrowid
     for item in data["items"]:
