@@ -319,18 +319,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const Divider(height: 1),
           ListTile(
-            leading: const Icon(Icons.tune),
-            title: const Text('Preferências'),
-            subtitle: const Text('Configurações do app'),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            leading: Icon(Icons.tune, color: Colors.grey.withOpacity(0.5)),
+            title: Text(
+              'Preferências',
+              style: TextStyle(color: Colors.grey.withOpacity(0.5)),
+            ),
+            subtitle: Text(
+              'Configurações do app',
+              style: TextStyle(color: Colors.grey.withOpacity(0.5)),
+            ),
             onTap: () {},
           ),
           const Divider(height: 1),
+
           ListTile(
-            leading: const Icon(Icons.shield),
-            title: const Text('Privacidade'),
-            subtitle: const Text('Segurança e privacidade'),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            leading: Icon(Icons.shield, color: Colors.grey.withOpacity(0.5)),
+            title: Text(
+              'Privacidade',
+              style: TextStyle(color: Colors.grey.withOpacity(0.5)),
+            ),
+            subtitle: Text(
+              'Segurança e privacidade',
+              style: TextStyle(color: Colors.grey.withOpacity(0.5)),
+            ),
+            //trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {},
           ),
         ],

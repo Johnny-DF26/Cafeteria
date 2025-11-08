@@ -107,15 +107,15 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           SliverAppBar(
             pinned: true,
             backgroundColor: Colors.brown.shade700,
-            expandedHeight: 110,
+            expandedHeight: 100,
             automaticallyImplyLeading: false,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
               title: Text(
-                'Cafe Gourmet',
+                'Café Gourmet',
                 style: GoogleFonts.pacifico(
-                  fontSize: 32,
+                  fontSize: 30,
                   color: Colors.white,
                   fontWeight: FontWeight.w400,
                   shadows: [
@@ -262,6 +262,19 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: Container(
+        height: 50, // aumente para testar
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.brown.shade200.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
       ),
     );
   }

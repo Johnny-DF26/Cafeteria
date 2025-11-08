@@ -514,6 +514,19 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.brown.shade200.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -90,15 +90,15 @@ class ProductsScreen extends StatelessWidget {
           SliverAppBar(
             pinned: true,
             backgroundColor: Colors.brown.shade700,
-            expandedHeight: 120,
+            expandedHeight: 100,
             automaticallyImplyLeading: false,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
               title: Text(
-                'Cafe Gourmet',
+                'Café Gourmet',
                 style: GoogleFonts.pacifico(
-                  fontSize: 32,
+                  fontSize: 30,
                   color: Colors.white,
                   fontWeight: FontWeight.w400,
                   shadows: [
@@ -246,6 +246,19 @@ class ProductsScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.brown.shade200.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
       ),
     );
   }

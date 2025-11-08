@@ -249,8 +249,13 @@ class _BuscarClienteScreenState extends State<BuscarClienteScreen>
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         backgroundColor: Colors.brown.shade700,
-        automaticallyImplyLeading: false,
         centerTitle: true,
+        elevation: 2,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 26),
+          onPressed: () => Navigator.of(context).pop(),
+          tooltip: 'Voltar',
+        ),
         title: Text(
           "Café Gourmet",
           style: GoogleFonts.pacifico(

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../core/routes.dart';
 import '../../services/auth_service.dart';
 import '../choose/choose_profile_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 
 class LoginAdminScreen extends StatefulWidget {
   const LoginAdminScreen({super.key});
@@ -133,13 +135,15 @@ class _LoginAdminScreenState extends State<LoginAdminScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 30),
-                        const Text(
-                          'Encanto Cupcakes',
-                          style: TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.bold),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Café Gourmet',
+                          style: GoogleFonts.pacifico(
+                            fontSize: 30,
+                            color: Colors.brown.shade800,
+                          ),
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 8),
                         const Text('Administrador',
                             style: TextStyle(
                                 color: Colors.red,

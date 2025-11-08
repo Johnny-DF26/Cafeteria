@@ -232,7 +232,7 @@ class _OrderScreenState extends State<OrderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: const Color.fromARGB(255, 250, 250, 250),
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
@@ -257,7 +257,7 @@ class _OrderScreenState extends State<OrderScreen> {
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
               title: Text(
-                'Cafe Gourmet',
+                'Café Gourmet',
                 style: GoogleFonts.pacifico(
                   fontSize: 30,
                   color: Colors.white,

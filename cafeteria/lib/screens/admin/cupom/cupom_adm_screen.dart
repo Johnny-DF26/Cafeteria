@@ -100,7 +100,7 @@ class CouponsScreen extends StatelessWidget {
           SliverAppBar(
             pinned: true,
             backgroundColor: Colors.brown.shade700,
-            expandedHeight: 120,
+            expandedHeight: 100,
             automaticallyImplyLeading: false,
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,

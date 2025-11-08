@@ -32,9 +32,8 @@ class _AdminScreenState extends State<AdminScreen> {
           SliverAppBar(
             pinned: true,
             backgroundColor: Colors.brown.shade700,
-            expandedHeight: 100,
+            expandedHeight: 60,
             automaticallyImplyLeading: false,
-            flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
               title: Text(
                 'Café Gourmet',
@@ -45,7 +44,6 @@ class _AdminScreenState extends State<AdminScreen> {
                 ),
               ),
             ),
-          ),
 
           // Conteúdo da tela de perfil
           SliverToBoxAdapter(
@@ -183,14 +181,20 @@ class _AdminScreenState extends State<AdminScreen> {
 
                   // Relatório
                   ListTile(
-                    leading: const Icon(Icons.insert_chart),
-                    title: const Text('Relatório'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    leading: Icon(Icons.insert_chart, color: Colors.grey.withOpacity(0.5)),
+                    title: Text(
+                      'Relatório',
+                      style: TextStyle(
+                        color: Colors.grey.withOpacity(0.5),
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                    trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.withOpacity(0.8)),
                     onTap: () {},
                   ),
 
                   // Configurações do app
-                  ListTile(
+                  /*ListTile(
                     leading: const Icon(Icons.tune),
                     title: const Text('Configurações do app'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -203,15 +207,46 @@ class _AdminScreenState extends State<AdminScreen> {
                     title: const Text('Privacidade e Segurança'),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () {},
-                  ),
+                  ),*/
 
                   // Sair
-                  ListTile( 
-                    leading: const Icon(Icons.logout),
-                    title: const Text('Sair'),
+                  ListTile(
+                    leading: Icon(Icons.logout, color: Colors.red.shade700),
+                    title: Text(
+                      'Sair',
+                      style: TextStyle(
+                        color: Colors.red.shade700,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.red.shade400),
+                    tileColor: Colors.red.shade50,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     onTap: () {
-                      Navigator.pushNamedAndRemoveUntil(context,'/choose',
-                        (Route<dynamic> route) => false,
+                      showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: Text('Deseja realmente sair?', style: TextStyle(color: Colors.red.shade700)),
+                          actions: [
+                            TextButton(
+                              child: const Text('Cancelar'),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.logout),
+                              label: const Text('Sair'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red.shade700,
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                                Navigator.pushNamedAndRemoveUntil(context, '/choose', (route) => false);
+                              },
+                            ),
+                          ],
+                        ),
                       );
                     },
                   ),
@@ -220,6 +255,19 @@ class _AdminScreenState extends State<AdminScreen> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.brown.shade200.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
       ),
     );
   }

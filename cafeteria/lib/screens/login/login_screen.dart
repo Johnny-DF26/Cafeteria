@@ -4,6 +4,8 @@ import '../../services/auth_service.dart';
 import '../choose/choose_profile_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:cafeteria/screens/global/user_provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -145,13 +147,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 30),
-                        const Text(
-                          'Encanto Cupcakes',
-                          style: TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.bold),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Café Gourmet',
+                          style: GoogleFonts.pacifico(
+                            fontSize: 30,
+                            color: Colors.brown.shade800,
+                          ),
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 8),
                         const Text('Faça seu Login',
                             style: TextStyle(color: Colors.black54)),
 

@@ -103,8 +103,8 @@ class PromotionsScreen extends StatelessWidget {
           SliverAppBar(
             pinned: true,
             backgroundColor: Colors.brown.shade700,
-            expandedHeight: 120,
-            automaticallyImplyLeading: false,
+            expandedHeight: 100,
+            automaticallyImplyLeading: true,
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
               title: Text(

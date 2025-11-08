@@ -105,13 +105,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
           SliverAppBar(
             pinned: true,
             backgroundColor: Colors.brown.shade700,
-            expandedHeight: 110,
+            expandedHeight: 100,
             automaticallyImplyLeading: false,
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
               title: Text(
-                'Cafe Gourmet',
+                'Café Gourmet',
                 style: GoogleFonts.pacifico(
                   fontSize: 30,
                   color: Colors.white,
@@ -332,6 +332,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.brown.shade200.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
       ),
     );
   }
