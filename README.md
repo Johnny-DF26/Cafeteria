@@ -50,7 +50,7 @@ Configuração rápida — frontend (Flutter)
    - Localmente: cafeteria/lib/screens/main.dart --> L30 -- GlobalConfig.GlobalConfig.useOnline = false;
    - Hospedado no Railway: cafeteria/lib/screens/main.dart --> L30 -- GlobalConfig.GlobalConfig.useOnline = true;
    - Mudar o local do banco de dados: API/db.py --> get_connect() para local ou para railway
-   - Local onde estão os IPs: cafeteria/lib/screens/config.dart 
+   - Local onde estão os IPs: cafeteria/lib/screens/config.dart
 4. Instale dependências:
    flutter pub get
 5. Rodar app:
