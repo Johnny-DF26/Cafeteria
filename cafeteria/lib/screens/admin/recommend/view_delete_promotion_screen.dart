@@ -52,27 +52,8 @@ class _ViewDeletePromotionScreenState extends State<ViewDeletePromotionScreen> {
     setState(() => carregando = false);
   }
 
-  Future<void> deletarPromocao(int id) async {
-    try {
-      final response = await http.delete(Uri.parse('$baseUrl/promocao/$id'));
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Promoção excluída com sucesso!')),
-        );
-        buscarPromocoes();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Erro ao excluir promoção!')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro de conexão: $e')),
-      );
-    }
-  }
-
   Future<void> atualizarPromocao(int id, Map<String, dynamic> dados) async {
+    final messenger = ScaffoldMessenger.of(context);
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/promocao/$id'),
@@ -80,23 +61,60 @@ class _ViewDeletePromotionScreenState extends State<ViewDeletePromotionScreen> {
         body: json.encode(dados),
       );
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Promoção atualizada com sucesso!')),
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Promoção atualizada com sucesso!'),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
         buscarPromocoes();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Erro ao atualizar promoção!')),
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Erro ao atualizar promoção!'),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro de conexão: $e')),
+      messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Erro de conexão!'),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
       );
     }
   }
 
   Future<void> adicionarPromocao(Map<String, dynamic> dados) async {
+    final messenger = ScaffoldMessenger.of(context);
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/promocao'),
@@ -104,18 +122,111 @@ class _ViewDeletePromotionScreenState extends State<ViewDeletePromotionScreen> {
         body: json.encode(dados),
       );
       if (response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Promoção adicionada com sucesso!')),
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Promoção adicionada com sucesso!'),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
         buscarPromocoes();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Erro ao adicionar promoção!')),
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Erro ao adicionar promoção!'),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro de conexão: $e')),
+      messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Erro de conexão!'),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
+  }
+
+  Future<void> deletarPromocao(int id) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final response = await http.delete(Uri.parse('$baseUrl/promocao/$id'));
+      if (response.statusCode == 200) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Promoção excluída com sucesso!'),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+        buscarPromocoes();
+      } else {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Erro ao excluir promoção!'),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Erro de conexão!'),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
       );
     }
   }
@@ -135,49 +246,78 @@ class _ViewDeletePromotionScreenState extends State<ViewDeletePromotionScreen> {
   }
 
   void abrirEdicao(Map<String, dynamic> produto) {
-    final precoController =
-        TextEditingController(text: produto['valor'].toString());
+    final precoController = TextEditingController(
+      text: produto['valor'] != null
+          ? produto['valor'].toString().replaceAll('.', ',')
+          : '',
+    );
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => Padding(
-        padding:
-            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Container(
-          padding: const EdgeInsets.all(16.0),
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: Colors.green.shade700,
+            width: 2,
           ),
+        ),
+        elevation: 8,
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
           child: SingleChildScrollView(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Editar Promoção',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Row(
+                  children: [
+                    Icon(Icons.local_offer, color: Colors.green.shade700, size: 28),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Editar Promoção',
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                Text('ID Produto: ${produto['idProdutos']}'),
+                const SizedBox(height: 18),
+                Text('ID Produto: ${produto['idProdutos']}',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 12),
                 _buildTextField('Preço Promocional', precoController,
                     keyboardType: TextInputType.number),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    final dadosAtualizados = {
-                      'preco_promocional':
-                          double.tryParse(precoController.text) ?? 0.0,
-                    };
-                    Navigator.pop(context);
-                    atualizarPromocao(produto['idProdutos'], dadosAtualizados);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.brown.shade700,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.save, color: Colors.white),
+                    label: const Text('Salvar Alterações', style: TextStyle(fontSize: 16)),
+                    onPressed: () {
+                      final precoStr = precoController.text.replaceAll(',', '.');
+                      final dadosAtualizados = {
+                        'preco_promocional': double.tryParse(precoStr) ?? 0.0,
+                      };
+                      Navigator.pop(context);
+                      atualizarPromocao(produto['idProdutos'], dadosAtualizados);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 4,
+                    ),
                   ),
-                  child: const Text('Salvar Alterações'),
                 ),
               ],
             ),
@@ -191,48 +331,70 @@ class _ViewDeletePromotionScreenState extends State<ViewDeletePromotionScreen> {
     final produtoIdController = TextEditingController();
     final precoController = TextEditingController();
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => Padding(
-        padding:
-            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Container(
-          padding: const EdgeInsets.all(16.0),
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: Colors.green.shade700,
+            width: 2,
           ),
+        ),
+        elevation: 8,
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
           child: SingleChildScrollView(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Adicionar Promoção',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                Row(
+                  children: [
+                    Icon(Icons.local_offer, color: Colors.green.shade700, size: 28),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Adicionar Promoção',
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                _buildTextField('ID do Produto', produtoIdController,
-                    keyboardType: TextInputType.number),
-                _buildTextField('Preço Promocional', precoController,
-                    keyboardType: TextInputType.number),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    final dados = {
-                      'Produto_idProduto':
-                          int.tryParse(produtoIdController.text) ?? 0,
-                      'preco_promocional':
-                          double.tryParse(precoController.text) ?? 0.0,
-                    };
-                    Navigator.pop(context);
-                    adicionarPromocao(dados);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade700,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
+                const SizedBox(height: 18),
+                _buildTextField('ID do Produto', produtoIdController, keyboardType: TextInputType.number),
+                _buildTextField('Preço Promocional', precoController, keyboardType: TextInputType.number),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text('Adicionar Promoção', style: TextStyle(fontSize: 16)),
+                    onPressed: () {
+                      final precoStr = precoController.text.replaceAll(',', '.');
+                      final dados = {
+                        'Produto_idProduto': int.tryParse(produtoIdController.text) ?? 0,
+                        'preco_promocional': double.tryParse(precoStr) ?? 0.0,
+                      };
+                      Navigator.pop(context);
+                      adicionarPromocao(dados);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 4,
+                    ),
                   ),
-                  child: const Text('Adicionar Promoção'),
                 ),
               ],
             ),
@@ -409,7 +571,8 @@ class _ViewDeletePromotionScreenState extends State<ViewDeletePromotionScreen> {
                                             Text(
                                                 'Categoria: ${produto['categoria']}'),
                                             Text(
-                                                'Preço Promocional: R\$ ${produto['valor'].toStringAsFixed(2)}'),
+                                              'Preço Promocional: R\$ ${produto['valor'].toStringAsFixed(2).replaceAll('.', ',')}',
+                                            ),
                                             Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.end,
@@ -426,36 +589,67 @@ class _ViewDeletePromotionScreenState extends State<ViewDeletePromotionScreen> {
                                                   onPressed: () {
                                                     showDialog(
                                                       context: context,
-                                                      builder: (_) =>
-                                                          AlertDialog(
-                                                        title: const Text(
-                                                            'Remover Promoção'),
-                                                        content: Text(
-                                                            'Deseja realmente remover a promoção do produto ID ${produto['idProdutos']}?'),
-                                                        actions: [
-                                                          TextButton(
-                                                            onPressed: () =>
-                                                                Navigator.pop(
-                                                                    context),
-                                                            child: const Text(
-                                                                'Cancelar'),
+                                                      builder: (_) => Dialog(
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(24),
+                                                          side: BorderSide(
+                                                            color: Colors.red.shade700,
+                                                            width: 2,
                                                           ),
-                                                          TextButton(
-                                                            onPressed: () {
-                                                              Navigator.pop(
-                                                                  context);
-                                                              deletarPromocao(
-                                                                  produto[
-                                                                      'idProdutos']);
-                                                            },
-                                                            child: const Text(
-                                                              'Remover',
-                                                              style: TextStyle(
-                                                                  color: Colors
-                                                                      .red),
-                                                            ),
+                                                        ),
+                                                        elevation: 8,
+                                                        backgroundColor: Colors.white,
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.all(24.0),
+                                                          child: Column(
+                                                            mainAxisSize: MainAxisSize.min,
+                                                            children: [
+                                                              Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 40),
+                                                              const SizedBox(height: 16),
+                                                              Text(
+                                                                'Remover Promoção',
+                                                                style: GoogleFonts.poppins(
+                                                                  fontSize: 20,
+                                                                  fontWeight: FontWeight.bold,
+                                                                  color: Colors.red.shade700,
+                                                                ),
+                                                              ),
+                                                              const SizedBox(height: 12),
+                                                              Text(
+                                                                'Deseja realmente remover a promoção do produto ID ${produto['idProdutos']}?',
+                                                                textAlign: TextAlign.center,
+                                                                style: GoogleFonts.poppins(fontSize: 16),
+                                                              ),
+                                                              const SizedBox(height: 24),
+                                                              Row(
+                                                                children: [
+                                                                  Expanded(
+                                                                    child: TextButton(
+                                                                      onPressed: () => Navigator.pop(context),
+                                                                      child: const Text('Cancelar'),
+                                                                    ),
+                                                                  ),
+                                                                  const SizedBox(width: 12),
+                                                                  Expanded(
+                                                                    child: ElevatedButton(
+                                                                      onPressed: () {
+                                                                        Navigator.pop(context);
+                                                                        deletarPromocao(produto['idProdutos']);
+                                                                      },
+                                                                      style: ElevatedButton.styleFrom(
+                                                                        backgroundColor: Colors.red.shade700,
+                                                                        foregroundColor: Colors.white,
+                                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                                        elevation: 2,
+                                                                      ),
+                                                                      child: const Text('Remover'),
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ],
                                                           ),
-                                                        ],
+                                                        ),
                                                       ),
                                                     );
                                                   },

@@ -10,7 +10,34 @@ import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
 
 String get baseUrl => GlobalConfig.GlobalConfig.api();
 
+// Formatadores fora da classe principal
+class _CepInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final text = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    String newText = '';
+    if (text.length > 5) {
+      newText = '${text.substring(0, 5)}-${text.substring(5, text.length > 8 ? 8 : text.length)}';
+    } else {
+      newText = text;
+    }
+    return TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
+  }
+}
 
+class _UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final text = newValue.text.toUpperCase();
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+}
 
 class AddressScreen extends StatefulWidget {
   const AddressScreen({super.key});
@@ -21,7 +48,6 @@ class AddressScreen extends StatefulWidget {
 
 class _AddressScreenState extends State<AddressScreen> {
   bool loading = false;
-  bool saving = false;
 
   @override
   void initState() {
@@ -30,80 +56,60 @@ class _AddressScreenState extends State<AddressScreen> {
   }
 
   Future<void> fetchAddresses() async {
-    if (!mounted) return;
     setState(() => loading = true);
-
     final userData = Provider.of<UserProvider>(context, listen: false).userData;
     if (userData == null) {
-      if (mounted) setState(() => loading = false);
+      setState(() => loading = false);
       return;
     }
-
     final url = Uri.parse('$baseUrl/get_endereco/${userData['id']}');
     try {
       final response = await http.get(url).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (mounted) {
-          Provider.of<UserProvider>(context, listen: false).addresses =
-              List<Map<String, dynamic>>.from(data);
-        }
+        Provider.of<UserProvider>(context, listen: false).addresses =
+            List<Map<String, dynamic>>.from(data);
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('⚠️ Erro ao buscar endereços: ${response.statusCode}')));
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('⚠️ Erro ao buscar endereços: ${response.statusCode}'))
+        );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('⚠️ Erro de conexão: $e')));
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('⚠️ Erro de conexão: $e'))
+      );
     } finally {
-      if (mounted) setState(() => loading = false);
+      setState(() => loading = false);
     }
   }
 
   Future<void> saveAddress(Map<String, dynamic> address, {int? idEndereco}) async {
     final userData = Provider.of<UserProvider>(context, listen: false).userData;
-    if (userData == null) {
-      return;
-    }
-
+    if (userData == null) return;
     final url = idEndereco == null
         ? Uri.parse('$baseUrl/add_endereco')
         : Uri.parse('$baseUrl/update_endereco/$idEndereco');
-
     try {
-      final body = jsonEncode({
-        ...address,
-        'Usuario_idUsuario': userData['id'],
-      });
-
+      final body = jsonEncode({...address, 'Usuario_idUsuario': userData['id']});
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: body,
       ).timeout(const Duration(seconds: 10));
-
       if (response.statusCode == 200) {
         await fetchAddresses();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Endereço salvo com sucesso'), backgroundColor: Colors.green)
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('❌ Erro ao salvar: ${response.statusCode}'), backgroundColor: Colors.red)
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('⚠️Erro ao conectar: $e'))
+          const SnackBar(content: Text('✅ Endereço salvo com sucesso'), backgroundColor: Colors.green)
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('❌ Erro ao salvar: ${response.statusCode}'), backgroundColor: Colors.red)
         );
       }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('⚠️Erro ao conectar: $e'))
+      );
     }
   }
 
@@ -113,61 +119,44 @@ class _AddressScreenState extends State<AddressScreen> {
       final response = await http.delete(url).timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         await fetchAddresses();
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Endereço removido com sucesso!'), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Endereço removido com sucesso!'), backgroundColor: Colors.green)
+        );
       } else {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Erro ao deletar: ${response.statusCode}'), backgroundColor: Colors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('❌ Erro ao deletar: ${response.statusCode}'), backgroundColor: Colors.red)
+        );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Erro ao conectar: $e'), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Erro ao conectar: $e'), backgroundColor: Colors.red)
+      );
     }
   }
 
   String? _validateCEP(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Informe o CEP';
-    }
-    
+    if (value == null || value.isEmpty) return 'Informe o CEP';
     final clean = value.replaceAll(RegExp(r'[^0-9]'), '');
-    
-    if (clean.length != 8) {
-      return 'CEP deve ter 8 dígitos';
-    }
-    
-    // Verifica se não são todos números iguais (ex: 00000-000, 11111-111)
-    if (RegExp(r'^(\d)\1{7}$').hasMatch(clean)) {
-      return '❌ CEP inválido';
-    }
-    
+    if (clean.length != 8) return 'CEP deve ter 8 dígitos';
+    if (RegExp(r'^(\d)\1{7}$').hasMatch(clean)) return '❌ CEP inválido';
     return null;
   }
 
   String? _validateUF(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Informe o estado (UF)';
-    }
-    
-    if (value.length != 2) {
-      return 'UF deve ter 2 letras';
-    }
-    
-    // Lista de UFs válidas no Brasil
+    if (value == null || value.isEmpty) return 'Informe o estado (UF)';
+    if (value.length != 2) return 'UF deve ter 2 letras';
     const ufsValidas = [
       'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
       'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
       'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
     ];
-    
-    if (!ufsValidas.contains(value.toUpperCase())) {
-      return '❌ UF inválida';
-    }
-    
+    if (!ufsValidas.contains(value.toUpperCase())) return '❌ UF inválida';
     return null;
   }
 
   void _showAddressDialog(BuildContext context, {Map<String, dynamic>? addr}) {
     final formKey = GlobalKey<FormState>();
     bool isSaving = false;
-
     final logradouroController = TextEditingController(text: addr?['logradouro'] ?? '');
     final numeroController = TextEditingController(text: addr?['numero']?.toString() ?? '');
     final bairroController = TextEditingController(text: addr?['bairro'] ?? '');
@@ -181,141 +170,170 @@ class _AddressScreenState extends State<AddressScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(addr == null ? 'Adicionar Endereço' : 'Editar Endereço'),
-          content: SingleChildScrollView(
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: cepController,
-                    decoration: const InputDecoration(
-                      labelText: 'CEP',
-                      hintText: '12345-678',
+        builder: (context, setDialogState) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: Colors.brown.shade700,
+              width: 2,
+            ),
+          ),
+          elevation: 8,
+          backgroundColor: Colors.white,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.95,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text('📍', style: TextStyle(fontSize: 26)),
+                        const SizedBox(width: 8),
+                        Text(
+                          addr == null ? 'Novo Endereço' : 'Editar Endereço',
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.brown.shade700,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.grey),
+                          onPressed: () => Navigator.pop(dialogContext),
+                        ),
+                      ],
                     ),
-                    enabled: !isSaving,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(8),
-                      _CepInputFormatter(),
-                    ],
-                    validator: _validateCEP,
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: logradouroController,
-                    decoration: const InputDecoration(labelText: 'Logradouro'),
-                    enabled: !isSaving,
-                    textCapitalization: TextCapitalization.words,
-                    validator: (value) => (value == null || value.isEmpty) ? 'Informe o logradouro' : null,
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: numeroController,
-                    decoration: const InputDecoration(labelText: 'Número'),
-                    enabled: !isSaving,
-                    keyboardType: TextInputType.text,
-                    validator: (value) => (value == null || value.isEmpty) ? 'Informe o número' : null,
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: bairroController,
-                    decoration: const InputDecoration(labelText: 'Bairro'),
-                    enabled: !isSaving,
-                    textCapitalization: TextCapitalization.words,
-                    validator: (value) => (value == null || value.isEmpty) ? 'Informe o bairro' : null,
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: cidadeController,
-                    decoration: const InputDecoration(labelText: 'Cidade'),
-                    enabled: !isSaving,
-                    textCapitalization: TextCapitalization.words,
-                    validator: (value) => (value == null || value.isEmpty) ? 'Informe a cidade' : null,
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: estadoController,
-                    decoration: const InputDecoration(
-                      labelText: 'Estado (UF)',
-                      hintText: 'SP',
+                    const SizedBox(height: 10),
+                    Form(
+                      key: formKey,
+                      child: Column(
+                        children: [
+                          _buildStyledTextField(
+                            label: 'CEP',
+                            controller: cepController,
+                            icon: Icons.local_post_office,
+                            keyboardType: TextInputType.number,
+                            enabled: !isSaving,
+                            validator: _validateCEP,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(8),
+                              _CepInputFormatter(),
+                            ],
+                          ),
+                          _buildStyledTextField(
+                            label: 'Logradouro',
+                            controller: logradouroController,
+                            icon: Icons.streetview,
+                            enabled: !isSaving,
+                            validator: (v) => (v == null || v.isEmpty) ? 'Informe o logradouro' : null,
+                          ),
+                          _buildStyledTextField(
+                            label: 'Número',
+                            controller: numeroController,
+                            icon: Icons.confirmation_number,
+                            enabled: !isSaving,
+                            validator: (v) => (v == null || v.isEmpty) ? 'Informe o número' : null,
+                          ),
+                          _buildStyledTextField(
+                            label: 'Bairro',
+                            controller: bairroController,
+                            icon: Icons.home_work,
+                            enabled: !isSaving,
+                            validator: (v) => (v == null || v.isEmpty) ? 'Informe o bairro' : null,
+                          ),
+                          _buildStyledTextField(
+                            label: 'Cidade',
+                            controller: cidadeController,
+                            icon: Icons.location_city,
+                            enabled: !isSaving,
+                            validator: (v) => (v == null || v.isEmpty) ? 'Informe a cidade' : null,
+                          ),
+                          _buildStyledTextField(
+                            label: 'Estado (UF)',
+                            controller: estadoController,
+                            icon: Icons.map,
+                            enabled: !isSaving,
+                            validator: _validateUF,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
+                              LengthLimitingTextInputFormatter(2),
+                              _UpperCaseTextFormatter(),
+                            ],
+                          ),
+                          _buildStyledTextField(
+                            label: 'Complemento',
+                            controller: complementoController,
+                            icon: Icons.apartment,
+                            enabled: !isSaving,
+                          ),
+                          _buildStyledTextField(
+                            label: 'Referência',
+                            controller: referenciaController,
+                            icon: Icons.pin_drop,
+                            enabled: !isSaving,
+                          ),
+                        ],
+                      ),
                     ),
-                    enabled: !isSaving,
-                    maxLength: 2,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')),
-                      LengthLimitingTextInputFormatter(2),
-                      _UpperCaseTextFormatter(),
-                    ],
-                    validator: _validateUF,
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: complementoController,
-                    decoration: const InputDecoration(
-                      labelText: 'Complemento (opcional)',
-                      hintText: 'Apt 101, Bloco A',
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: isSaving ? null : () {
+                              Navigator.pop(dialogContext);
+                            },
+                            child: const Text('Cancelar'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            //icon: Text(addr == null ? '➕' : '💾', style: TextStyle(fontSize: 18)),
+                            label: Text(addr == null ? 'Salvar' : 'Atualizar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.brown.shade700,
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size(double.infinity, 44),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 4,
+                            ),
+                            onPressed: isSaving ? null : () async {
+                              if (formKey.currentState!.validate()) {
+                                setDialogState(() => isSaving = true);
+                                final newAddress = {
+                                  'logradouro': logradouroController.text.trim(),
+                                  'numero': numeroController.text.trim(),
+                                  'bairro': bairroController.text.trim(),
+                                  'cidade': cidadeController.text.trim(),
+                                  'estado': estadoController.text.trim(),
+                                  'cep': cepController.text.replaceAll(RegExp(r'[^0-9]'), ''),
+                                  'complemento': complementoController.text.trim(),
+                                  'referencia': referenciaController.text.trim(),
+                                };
+                                await saveAddress(newAddress, idEndereco: addr?['idEndereco_usuario']);
+                                if (context.mounted) {
+                                  Navigator.pop(dialogContext);
+                                }
+                              }
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                    enabled: !isSaving,
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: referenciaController,
-                    decoration: const InputDecoration(
-                      labelText: 'Referência (opcional)',
-                      hintText: 'Próximo ao mercado',
-                    ),
-                    enabled: !isSaving,
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: isSaving ? null : () {
-                Navigator.pop(dialogContext);
-              },
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.brown.shade700),
-              onPressed: isSaving ? null : () async {
-                if (formKey.currentState!.validate()) {
-                  setDialogState(() => isSaving = true);
-                  
-                  final newAddress = {
-                    'logradouro': logradouroController.text.trim(),
-                    'numero': numeroController.text.trim(),
-                    'bairro': bairroController.text.trim(),
-                    'cidade': cidadeController.text.trim(),
-                    'estado': estadoController.text.trim(),
-                    'cep': cepController.text.replaceAll(RegExp(r'[^0-9]'), ''),
-                    'complemento': complementoController.text.trim(),
-                    'referencia': referenciaController.text.trim(),
-                  };
-                  
-                  await saveAddress(newAddress, idEndereco: addr?['idEndereco_usuario']);
-                  
-                  if (context.mounted) {
-                    Navigator.pop(dialogContext);
-                  }
-                }
-              },
-              child: isSaving 
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                  )
-                : const Text('Salvar', style: TextStyle(color: Colors.white)),
-            ),
-          ],
         ),
       ),
     ).then((_) {
@@ -339,8 +357,8 @@ class _AddressScreenState extends State<AddressScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancelar')),
           ElevatedButton(
-            onPressed: () => Navigator.pop(c, true), 
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red), 
+            onPressed: () => Navigator.pop(c, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Remover', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -349,6 +367,48 @@ class _AddressScreenState extends State<AddressScreen> {
     if (ok == true) {
       await deleteAddress(idEndereco);
     }
+  }
+
+  Widget _buildStyledTextField({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+    bool enabled = true,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextFormField(
+        controller: controller,
+        enabled: enabled,
+        keyboardType: keyboardType,
+        validator: validator,
+        inputFormatters: inputFormatters,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: Colors.brown.shade700),
+          labelStyle: TextStyle(color: Colors.brown.shade700),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.brown.shade900, width: 2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.red.shade700, width: 2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.red.shade900, width: 2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -420,7 +480,6 @@ class _AddressScreenState extends State<AddressScreen> {
                                 direction: DismissDirection.endToStart,
                                 confirmDismiss: (_) async {
                                   await _confirmDelete(context, addr['idEndereco_usuario']);
-                                  // Não remover automaticamente; a função delete atualiza a lista
                                   return false;
                                 },
                                 background: Container(
@@ -482,36 +541,6 @@ class _AddressScreenState extends State<AddressScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Pedidos'),
         ],
       ),
-    );
-  }
-}
-
-class _CepInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    final text = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-    String newText = '';
-
-    if (text.length >= 5) {
-      newText = '${text.substring(0, 5)}-${text.substring(5)}';
-    } else {
-      newText = text;
-    }
-
-    return TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: newText.length),
-    );
-  }
-}
-
-class _UpperCaseTextFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    final text = newValue.text.toUpperCase();
-    return TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: text.length),
     );
   }
 }

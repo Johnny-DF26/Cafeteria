@@ -99,6 +99,7 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
   }
 
   Future<void> atualizarProduto(int id, Map<String, dynamic> dados) async {
+    final messenger = ScaffoldMessenger.of(context);
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/produtos/$id'),
@@ -106,24 +107,54 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
         body: json.encode(dados),
       );
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Produto atualizado com sucesso!'),
-            backgroundColor: Colors.green,
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text("Produto atualizado com sucesso!"),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
         buscarProdutos();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Erro ao atualizar produto!'),
-            backgroundColor: Colors.red,
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 8),
+                Text("Erro ao atualizar produto!"),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro de conexão: $e')),
+      messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text("Erro de conexão!"),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
       );
     }
   }
@@ -157,69 +188,56 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
   }
 
   void abrirEdicao(Map<String, dynamic> produto) {
-    final idProdutoController =
-        TextEditingController(text: produto['idProdutos'].toString());
+    final idProdutoController = TextEditingController(text: produto['idProdutos'].toString());
     final nomeController = TextEditingController(text: produto['nome']);
-    final descricaoController =
-        TextEditingController(text: produto['descricao']);
-    final valorController =
-        TextEditingController(text: produto['valor'].toString().replaceAll('.', ','));
-    final quantidadeController =
-        TextEditingController(text: produto['quantidade_estoque'].toString());
+    final descricaoController = TextEditingController(text: produto['descricao']);
+    final valorController = TextEditingController(text: produto['valor'].toString().replaceAll('.', ','));
+    final quantidadeController = TextEditingController(text: produto['quantidade_estoque'].toString());
     final imagemController = TextEditingController(text: produto['imagem']);
-    final categoriaController =
-        TextEditingController(text: produto['categoria'] ?? '');
+    final categoriaController = TextEditingController(text: produto['categoria'] ?? '');
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 20,
-            right: 20,
-            top: 20,
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: Colors.brown.shade700,
+            width: 2,
           ),
-          child: SingleChildScrollView(
+        ),
+        elevation: 8,
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.95,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.edit,
-                        color: Colors.orange.shade700,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
+                    Icon(Icons.edit, color: Colors.orange.shade700, size: 28),
+                    const SizedBox(width: 8),
                     Text(
                       'Editar Produto',
                       style: GoogleFonts.poppins(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
                         color: Colors.brown.shade900,
                       ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
-
-                // ID (somente leitura)
                 TextField(
                   controller: idProdutoController,
                   readOnly: true,
@@ -235,9 +253,8 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
                 _buildTextField('Nome', nomeController, Icons.shopping_bag),
-                _buildTextField('Descrição', descricaoController, Icons.description, maxLines: 3),
+                _buildTextField('Descrição', descricaoController, Icons.description, maxLines: 2),
                 _buildTextField('Categoria', categoriaController, Icons.category),
                 _buildTextField(
                   'Valor (R\$)',
@@ -258,8 +275,6 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                 ),
                 _buildTextField('URL da Imagem', imagemController, Icons.image),
                 const SizedBox(height: 20),
-
-                // Botão salvar
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -286,8 +301,7 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                         'nome': nomeController.text,
                         'descricao': descricaoController.text,
                         'valor': double.tryParse(valorString) ?? 0.0,
-                        'quantidade_estoque':
-                            int.tryParse(quantidadeController.text) ?? 0,
+                        'quantidade_estoque': int.tryParse(quantidadeController.text) ?? 0,
                         'imagem': imagemController.text,
                         'categoria': categoriaController.text,
                       };
@@ -296,7 +310,6 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                     },
                   ),
                 ),
-                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -775,47 +788,72 @@ class _ViewDeleteProductScreenState extends State<ViewDeleteProductScreen> {
                                                         onTap: () {
                                                           showDialog(
                                                             context: context,
-                                                            builder: (_) => AlertDialog(
+                                                            builder: (_) => Dialog(
                                                               shape: RoundedRectangleBorder(
-                                                                borderRadius: BorderRadius.circular(12),
-                                                              ),
-                                                              title: Text(
-                                                                'Excluir Produto',
-                                                                style: GoogleFonts.poppins(
-                                                                  fontWeight: FontWeight.w600,
+                                                                borderRadius: BorderRadius.circular(20),
+                                                                side: BorderSide(
+                                                                  color: Colors.red.shade700,
+                                                                  width: 2,
                                                                 ),
                                                               ),
-                                                              content: Text(
-                                                                'Deseja realmente excluir "${produto['nome']}"?',
-                                                                style: GoogleFonts.poppins(),
+                                                              elevation: 8,
+                                                              backgroundColor: Colors.white,
+                                                              child: Padding(
+                                                                padding: const EdgeInsets.all(24.0),
+                                                                child: ConstrainedBox(
+                                                                  constraints: BoxConstraints(
+                                                                    maxWidth: MediaQuery.of(context).size.width * 0.95,
+                                                                  ),
+                                                                  child: Column(
+                                                                    mainAxisSize: MainAxisSize.min,
+                                                                    children: [
+                                                                      Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 40),
+                                                                      const SizedBox(height: 16),
+                                                                      Text(
+                                                                        'Excluir Produto',
+                                                                        style: GoogleFonts.poppins(
+                                                                          fontSize: 20,
+                                                                          fontWeight: FontWeight.bold,
+                                                                          color: Colors.red.shade700,
+                                                                        ),
+                                                                      ),
+                                                                      const SizedBox(height: 12),
+                                                                      Text(
+                                                                        'Deseja realmente excluir "${produto['nome']}"?',
+                                                                        textAlign: TextAlign.center,
+                                                                        style: GoogleFonts.poppins(fontSize: 16),
+                                                                      ),
+                                                                      const SizedBox(height: 24),
+                                                                      Row(
+                                                                        children: [
+                                                                          Expanded(
+                                                                            child: TextButton(
+                                                                              onPressed: () => Navigator.pop(context),
+                                                                              child: const Text('Cancelar'),
+                                                                            ),
+                                                                          ),
+                                                                          const SizedBox(width: 12),
+                                                                          Expanded(
+                                                                            child: ElevatedButton(
+                                                                              onPressed: () {
+                                                                                Navigator.pop(context);
+                                                                                deletarProduto(produto['idProdutos']);
+                                                                              },
+                                                                              style: ElevatedButton.styleFrom(
+                                                                                backgroundColor: Colors.red.shade700,
+                                                                                foregroundColor: Colors.white,
+                                                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                                                elevation: 2,
+                                                                              ),
+                                                                              child: const Text('Excluir'),
+                                                                            ),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ),
                                                               ),
-                                                              actions: [
-                                                                TextButton(
-                                                                  onPressed: () => Navigator.pop(context),
-                                                                  child: Text(
-                                                                    'Cancelar',
-                                                                    style: GoogleFonts.poppins(
-                                                                      color: Colors.grey.shade700,
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                ElevatedButton(
-                                                                  style: ElevatedButton.styleFrom(
-                                                                    backgroundColor: Colors.red.shade700,
-                                                                    foregroundColor: Colors.white,
-                                                                  ),
-                                                                  onPressed: () {
-                                                                    Navigator.pop(context);
-                                                                    deletarProduto(produto['idProdutos']);
-                                                                  },
-                                                                  child: Text(
-                                                                    'Excluir',
-                                                                    style: GoogleFonts.poppins(
-                                                                      fontWeight: FontWeight.w600,
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ],
                                                             ),
                                                           );
                                                         },
