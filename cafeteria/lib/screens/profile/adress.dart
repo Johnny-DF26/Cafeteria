@@ -99,11 +99,37 @@ class _AddressScreenState extends State<AddressScreen> {
       if (response.statusCode == 200) {
         await fetchAddresses();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Endereço salvo com sucesso'), backgroundColor: Colors.green)
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Text(
+                  idEndereco == null
+                    ? 'Endereço salvo com sucesso'
+                    : 'Endereço atualizado com sucesso',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            duration: const Duration(seconds: 3),
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Erro ao salvar: ${response.statusCode}'), backgroundColor: Colors.red)
+          SnackBar(
+            content: Text('❌ Erro ao salvar: ${response.statusCode}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          ),
         );
       }
     } catch (e) {
@@ -223,8 +249,6 @@ class _AddressScreenState extends State<AddressScreen> {
                             enabled: !isSaving,
                             validator: _validateCEP,
                             inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(8),
                               _CepInputFormatter(),
                             ],
                           ),
@@ -273,12 +297,18 @@ class _AddressScreenState extends State<AddressScreen> {
                             controller: complementoController,
                             icon: Icons.apartment,
                             enabled: !isSaving,
+                            hintText: 'Opcional',
+                            filled: true,
+                            fillColor: Colors.brown.shade50.withOpacity(0.5),
                           ),
                           _buildStyledTextField(
                             label: 'Referência',
                             controller: referenciaController,
                             icon: Icons.pin_drop,
                             enabled: !isSaving,
+                            hintText: 'Opcional',
+                            filled: true,
+                            fillColor: Colors.brown.shade50.withOpacity(0.5),
                           ),
                         ],
                       ),
@@ -349,24 +379,79 @@ class _AddressScreenState extends State<AddressScreen> {
   }
 
   Future<void> _confirmDelete(BuildContext context, int idEndereco) async {
-    final ok = await showDialog<bool>(
+    final addresses = Provider.of<UserProvider>(context, listen: false).addresses;
+    final endereco = addresses.firstWhere(
+      (e) => e['idEndereco_usuario'] == idEndereco,
+      orElse: () => <String, dynamic>{},
+    );
+
+    await showDialog(
       context: context,
-      builder: (c) => AlertDialog(
-        title: const Text('Confirmar remoção'),
-        content: const Text('Deseja realmente remover este endereço?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancelar')),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(c, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Remover', style: TextStyle(color: Colors.white)),
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: Colors.red.shade700,
+            width: 2,
           ),
-        ],
+        ),
+        elevation: 8,
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 40),
+              const SizedBox(height: 16),
+              Text(
+                'Remover Endereço',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                endereco.isNotEmpty
+                  ? 'Deseja realmente remover o endereço "${endereco['logradouro']}, ${endereco['numero']}"?'
+                  : 'Deseja realmente remover este endereço?',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(fontSize: 16),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancelar'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await deleteAddress(idEndereco);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade700,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
+                      ),
+                      child: const Text('Remover'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
-    if (ok == true) {
-      await deleteAddress(idEndereco);
-    }
   }
 
   Widget _buildStyledTextField({
@@ -377,6 +462,9 @@ class _AddressScreenState extends State<AddressScreen> {
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
     List<TextInputFormatter>? inputFormatters,
+    String? hintText,
+    bool filled = false,
+    Color? fillColor,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -388,8 +476,11 @@ class _AddressScreenState extends State<AddressScreen> {
         inputFormatters: inputFormatters,
         decoration: InputDecoration(
           labelText: label,
+          hintText: hintText,
           prefixIcon: Icon(icon, color: Colors.brown.shade700),
           labelStyle: TextStyle(color: Colors.brown.shade700),
+          filled: filled,
+          fillColor: fillColor,
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: Colors.brown.shade700, width: 2),
             borderRadius: BorderRadius.circular(12),
@@ -416,105 +507,177 @@ class _AddressScreenState extends State<AddressScreen> {
     final addresses = Provider.of<UserProvider>(context).addresses;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: RefreshIndicator(
-        onRefresh: fetchAddresses,
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              pinned: true,
-              backgroundColor: Colors.brown.shade700,
-              expandedHeight: 110,
-              automaticallyImplyLeading: false,
-              iconTheme: const IconThemeData(color: Colors.white),
-              flexibleSpace: FlexibleSpaceBar(
-                centerTitle: true,
-                title: Text(
-                  'Café Gourmet',
-                  style: GoogleFonts.pacifico(
-                    fontSize: 30,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w400,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFF8E8D8), Color(0xFFEDE7E3)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 600;
+            final horizontalPadding = isWide ? constraints.maxWidth * 0.15 : 16.0;
+            final cardWidth = isWide ? 500.0 : double.infinity;
+
+            return RefreshIndicator(
+              onRefresh: fetchAddresses,
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverAppBar(
+                    pinned: true,
+                    backgroundColor: Colors.brown.shade700,
+                    expandedHeight: 110,
+                    automaticallyImplyLeading: false,
+                    iconTheme: const IconThemeData(color: Colors.white),
+                    flexibleSpace: FlexibleSpaceBar(
+                      centerTitle: true,
+                      title: Text(
+                        'Café Gourmet',
+                        style: GoogleFonts.pacifico(
+                          fontSize: 30,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text(
-                  'Endereços',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: const Color.fromARGB(255, 46, 33, 27),
-                  ),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: loading
-                    ? const Padding(
-                        padding: EdgeInsets.only(top: 32),
-                        child: Center(child: CircularProgressIndicator()),
-                      )
-                    : addresses.isEmpty
-                        ? const Padding(
-                            padding: EdgeInsets.only(top: 32),
-                            child: Center(child: Text('⚠️ Nenhum endereço cadastrado')),
-                          )
-                        : ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: addresses.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 8),
-                            itemBuilder: (context, index) {
-                              final addr = addresses[index];
-                              final title = '${addr['logradouro'] ?? ''}, ${addr['numero'] ?? ''}';
-                              final subtitle = '${addr['bairro'] ?? ''}, ${addr['cidade'] ?? ''} - ${addr['estado'] ?? ''}';
-                              return Dismissible(
-                                key: Key('${addr['idEndereco_usuario']}_${index}'),
-                                direction: DismissDirection.endToStart,
-                                confirmDismiss: (_) async {
-                                  await _confirmDelete(context, addr['idEndereco_usuario']);
-                                  return false;
-                                },
-                                background: Container(
-                                  color: Colors.red,
-                                  alignment: Alignment.centerRight,
-                                  padding: const EdgeInsets.only(right: 20),
-                                  child: const Icon(Icons.delete, color: Colors.white),
-                                ),
-                                child: Card(
-                                  margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
-                                  child: ListTile(
-                                    title: Text(title),
-                                    subtitle: Text(subtitle),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.edit, color: Colors.blue),
-                                          onPressed: () => _showAddressDialog(context, addr: addr),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete, color: Colors.red),
-                                          onPressed: () => _confirmDelete(context, addr['idEndereco_usuario']),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(horizontalPadding, 24, horizontalPadding, 8),
+                      child: Row(
+                        children: [
+                          Icon(Icons.location_on, color: Colors.brown.shade700, size: 32),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Endereços',
+                            style: GoogleFonts.poppins(
+                              fontSize: isWide ? 32 : 26,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.brown.shade700,
+                            ),
                           ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                      child: loading
+                          ? const Padding(
+                              padding: EdgeInsets.only(top: 32),
+                              child: Center(child: CircularProgressIndicator()),
+                            )
+                          : addresses.isEmpty
+                              ? const Padding(
+                                  padding: EdgeInsets.only(top: 32),
+                                  child: Center(child: Text('⚠️ Nenhum endereço cadastrado')),
+                                )
+                              : ListView.separated(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: addresses.length,
+                                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                                  itemBuilder: (context, index) {
+                                    final addr = addresses[index];
+                                    final title = '${addr['logradouro'] ?? ''}, ${addr['numero'] ?? ''}';
+                                    final subtitle = '${addr['bairro'] ?? ''}, ${addr['cidade'] ?? ''} - ${addr['estado'] ?? ''}';
+                                    return Center(
+                                      child: SizedBox(
+                                        width: cardWidth,
+                                        child: Dismissible(
+                                          key: Key('${addr['idEndereco_usuario']}_${index}'),
+                                          direction: DismissDirection.endToStart,
+                                          confirmDismiss: (_) async {
+                                            await _confirmDelete(context, addr['idEndereco_usuario']);
+                                            return false;
+                                          },
+                                          background: Container(
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              border: Border.all(color: Colors.red.shade700, width: 2),
+                                              borderRadius: BorderRadius.circular(18),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withOpacity(0.08),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ],
+                                            ),
+                                            alignment: Alignment.centerRight,
+                                            padding: const EdgeInsets.only(right: 32),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.delete_forever, color: Colors.red.shade700, size: isWide ? 40 : 32),
+                                                const SizedBox(width: 10),
+                                                Text(
+                                                  'Excluir',
+                                                  style: GoogleFonts.poppins(
+                                                    color: Colors.red.shade700,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: isWide ? 22 : 18,
+                                                    letterSpacing: 1.2,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          child: Card(
+                                            elevation: 4,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(18),
+                                            ),
+                                            color: const Color.fromARGB(255, 255, 230, 230).withOpacity(0.95),
+                                            margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
+                                            child: ListTile(
+                                              leading: Icon(Icons.home, color: Colors.brown.shade700, size: isWide ? 40 : 32),
+                                              title: Text(
+                                                title,
+                                                style: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: isWide ? 20 : 17,
+                                                  color: Colors.brown.shade900,
+                                                ),
+                                              ),
+                                              subtitle: Text(
+                                                subtitle,
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: isWide ? 17 : 15,
+                                                  color: Colors.brown.shade400,
+                                                ),
+                                              ),
+                                              trailing: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  IconButton(
+                                                    icon: Icon(Icons.edit, color: Colors.blue, size: isWide ? 32 : 28),
+                                                    onPressed: () => _showAddressDialog(context, addr: addr),
+                                                  ),
+                                                  IconButton(
+                                                    icon: Icon(Icons.delete, color: Colors.red, size: isWide ? 32 : 28),
+                                                    onPressed: () => _confirmDelete(context, addr['idEndereco_usuario']),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                    ),
+                  ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 80)),
+                ],
               ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
-          ],
+            );
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
