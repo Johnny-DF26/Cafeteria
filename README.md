@@ -60,6 +60,7 @@ Configuração rápida — frontend (Flutter)
 6. APK:
    - Para baixar e rodar no android
       - Cafeteria/apk
+      - Acesso administrador -> login: admin senha: 123456
 
 Observações importantes
 - O frontend usa um IP fixo em vários arquivos — ajuste para o IP da máquina que roda a API ou use um nome DNS local. Verifique [cafeteria/lib/services/auth_service.dart](cafeteria/lib/services/auth_service.dart) e referências a `$baseUrl`.
