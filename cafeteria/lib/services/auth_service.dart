@@ -9,7 +9,6 @@ class AuthException implements Exception {
 }
 
 class AuthService {
-  //final String baseUrl = 'http://192.168.0.167:5000'; // IP da sua API
   final String baseUrl = GlobalConfig.GlobalConfig.api();
 
 // ---------------------------------------------------------------------------------------
