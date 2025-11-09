@@ -60,6 +60,9 @@ def criar_usuario():
 # ------------------------
 # Login de Usuário
 # ------------------------
+# Dicionário para controlar tentativas (em produção use Redis ou banco)
+tentativas_login = {}
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -78,11 +81,17 @@ def login():
         cursor.execute("SELECT * FROM usuario WHERE email = %s", (email,))
         user = cursor.fetchone()
 
-        if user and user['senha'] == senha:
-            # Atualiza o último login
-            #cursor.execute("UPDATE cadastro_usuario SET ultimo_login = NOW() WHERE email = %s", (email,))
-            conn.commit()
+        # Se o usuário está bloqueado, retorna imediatamente e NÃO conta tentativas
+        if user and user.get('ativo') == 0:
+            return jsonify({'error': 'Conta bloqueada por excesso de tentativas. Entre em contato com o suporte.'}), 403
 
+        # Inicializa contador de tentativas
+        if email not in tentativas_login:
+            tentativas_login[email] = 0
+
+        if user and user['senha'] == senha:
+            tentativas_login[email] = 0
+            conn.commit()
             return jsonify({
                 'message': 'Login bem-sucedido:',
                 'user': {
@@ -92,11 +101,20 @@ def login():
                     'telefone': user.get('telefone'),
                     'endereco': user.get('endereco'),
                     'dataNascimento': user.get('data_nascimento'),
-                    'status': user.get('ativo')  # ⚡ ADICIONE ESTA LINHA
+                    'status': user.get('ativo')
                 }
             }), 200
 
-        return jsonify({'error': 'Email ou senha inválidos'}), 401
+        # Senha incorreta, incrementa tentativas
+        tentativas_login[email] += 1
+        tentativas_restantes = 5 - tentativas_login[email]
+
+        if tentativas_login[email] >= 5:
+            cursor.execute("UPDATE usuario SET ativo = 0 WHERE email = %s", (email,))
+            conn.commit()
+            return jsonify({'error': 'Conta bloqueada por excesso de tentativas. Entre em contato com o suporte.'}), 403
+
+        return jsonify({'error': f'Email ou senha inválidos. Restam {tentativas_restantes} tentativa(s).'}), 401
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -105,10 +123,11 @@ def login():
         cursor.close()
         conn.close()
 
-
 # ------------------------
 # Login de Administrador
 # ------------------------
+tentativas_login_admin = {}
+
 @app.route('/login_admin', methods=['POST'])
 def login_admin():
     data = request.get_json()
@@ -127,18 +146,36 @@ def login_admin():
         cursor.execute("SELECT * FROM administrador WHERE email = %s", (email,))
         user = cursor.fetchone()
 
+        # Se o administrador está bloqueado, retorna imediatamente e NÃO conta tentativas
+        if user and user.get('ativo') == 0:
+            return jsonify({'error': 'Conta de administrador bloqueada por excesso de tentativas. Contate o suporte.'}), 403
+
+        # Inicializa contador de tentativas
+        if email not in tentativas_login_admin:
+            tentativas_login_admin[email] = 0
+
         if user and user['senha'] == senha:
+            tentativas_login_admin[email] = 0
             conn.commit()
             return jsonify({
                 'message': 'Login bem-sucedido',
-                'user': {  # pode até renomear para 'admin' se quiser
+                'user': {
                     'idAdministrador': user.get('idAdministrador'),
                     'nome': user.get('nome'),
                     'email': user.get('email'),
                 }
             }), 200
 
-        return jsonify({'error': 'Email ou senha inválidos'}), 401
+        # Senha incorreta, incrementa tentativas
+        tentativas_login_admin[email] += 1
+        tentativas_restantes = 5 - tentativas_login_admin[email]
+
+        if tentativas_login_admin[email] >= 5:
+            cursor.execute("UPDATE administrador SET ativo = 0 WHERE email = %s", (email,))
+            conn.commit()
+            return jsonify({'error': 'Conta de administrador bloqueada por excesso de tentativas. Contate o suporte.'}), 403
+
+        return jsonify({'error': f'Email ou senha inválidos. Restam {tentativas_restantes} tentativa(s).'}), 401
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -146,7 +183,6 @@ def login_admin():
     finally:
         cursor.close()
         conn.close()
-
 #====================================================================================================================================================================================
 #                                                                       Gerenciamento de Conta -- Usuário
 #====================================================================================================================================================================================
