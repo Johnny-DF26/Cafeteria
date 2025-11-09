@@ -98,6 +98,7 @@ class _OrderAdminScreenState extends State<OrderAdminScreen> {
 
   Future<void> atualizarStatus(int id, String novoStatus) async {
     final url = Uri.parse('$baseUrl/update_relatorios_pedidos/$id');
+    final messenger = ScaffoldMessenger.of(context);
     final response = await http.put(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -105,18 +106,39 @@ class _OrderAdminScreenState extends State<OrderAdminScreen> {
     );
 
     if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Status atualizado com sucesso!'),
-          backgroundColor: Colors.green,
+      messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Status atualizado com sucesso!'),
+            ],
+          ),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
         ),
       );
       setState(() {
         _relatoriosFuture = fetchRelatorios();
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar status: ${response.body}')),
+      messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Erro ao atualizar status!'),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
       );
     }
   }

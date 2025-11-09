@@ -56,17 +56,53 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
       final response = await http.delete(Uri.parse('$baseUrl/cupons/$id'));
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cupom excluído com sucesso!')),
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Cupom excluído com sucesso!'),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
         buscarCupons();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Erro ao excluir cupom!')),
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Erro ao excluir cupom!'),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro de conexão: $e')),
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Erro de conexão!'),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
       );
     }
   }
@@ -74,7 +110,6 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
   // --------------------- ATUALIZAR CUPOM ---------------------
   Future<void> atualizarCupom(int id, Map<String, dynamic> dados) async {
     try {
-      // Converte DD/MM/YYYY para YYYY-MM-DD
       if (dados['data_validade'] != null && dados['data_validade'].isNotEmpty) {
         dados['data_validade'] = formatarParaBanco(dados['data_validade']);
       }
@@ -87,17 +122,53 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cupom atualizado com sucesso!')),
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Cupom atualizado com sucesso!'),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
         buscarCupons();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao atualizar cupom: ${response.body}')),
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Erro ao atualizar cupom!'),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro de conexão: $e')),
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Erro de conexão!'),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
       );
     }
   }
@@ -105,7 +176,6 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
   // --------------------- ADICIONAR CUPOM ---------------------
   Future<void> adicionarCupom(Map<String, dynamic> dados) async {
     try {
-      // Converte DD/MM/YYYY para YYYY-MM-DD
       if (dados['data_validade'] != null && dados['data_validade'].isNotEmpty) {
         dados['data_validade'] = formatarParaBanco(dados['data_validade']);
       }
@@ -117,17 +187,53 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
       );
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Cupom adicionado com sucesso!')),
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Cupom adicionado com sucesso!'),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
         buscarCupons();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Erro ao adicionar cupom: ${response.body}')),
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Erro ao adicionar cupom!'),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('⚠️ Erro de conexão: $e')),
+        SnackBar(
+          content: Row(
+            children: const [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Erro de conexão!'),
+            ],
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
       );
     }
   }
@@ -237,20 +343,45 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
     final validadeControllerModal = TextEditingController();
     String tipoDesconto = 'percentual';
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Container(
-          padding: const EdgeInsets.all(16.0),
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: Colors.green.shade700,
+            width: 2,
+          ),
+        ),
+        elevation: 8,
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
           child: SingleChildScrollView(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Adicionar Cupom', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Icon(Icons.card_giftcard, color: Colors.green.shade700, size: 28),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Adicionar Cupom',
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
                 _buildTextField('Código', codigoControllerModal),
                 _buildTextField('Descrição', descricaoControllerModal),
                 _buildTextField('Desconto', descontoControllerModal, keyboardType: TextInputType.number),
@@ -267,26 +398,33 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
                 _buildTextField('Data de Validade', validadeControllerModal, 
                   keyboardType: TextInputType.number,
                   useMask: true),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    final dados = {
-                      'codigo': codigoControllerModal.text,
-                      'descricao': descricaoControllerModal.text,
-                      'desconto': double.tryParse(descontoControllerModal.text) ?? 0,
-                      'tipo_desconto': tipoDesconto,
-                      'data_validade': validadeControllerModal.text,
-                      'Administrador_idAdministrador': widget.adminId,
-                    };
-                    Navigator.pop(context);
-                    adicionarCupom(dados);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade700,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text('Adicionar Cupom', style: TextStyle(fontSize: 16)),
+                    onPressed: () {
+                      final descontoStr = descontoControllerModal.text.replaceAll(',', '.');
+                      final dados = {
+                        'codigo': codigoControllerModal.text,
+                        'descricao': descricaoControllerModal.text,
+                        'desconto': double.tryParse(descontoStr) ?? 0,
+                        'tipo_desconto': tipoDesconto,
+                        'data_validade': validadeControllerModal.text,
+                        'Administrador_idAdministrador': widget.adminId,
+                      };
+                      Navigator.pop(context);
+                      adicionarCupom(dados);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 4,
+                    ),
                   ),
-                  child: const Text('Adicionar Cupom'),
                 ),
               ],
             ),
@@ -300,26 +438,51 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
   void abrirEdicao(Map<String, dynamic> cupom) {
     final codigoControllerModal = TextEditingController(text: cupom['codigo']);
     final descricaoControllerModal = TextEditingController(text: cupom['descricao']);
-    final descontoControllerModal = TextEditingController(text: cupom['desconto'].toString());
+    final descontoControllerModal = TextEditingController(text: cupom['desconto'].toString().replaceAll('.', ','));
     final validadeControllerModal = TextEditingController(
       text: formatarParaTela(cupom['data_validade'])
     );
     String tipoDesconto = cupom['tipo_desconto'];
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Container(
-          padding: const EdgeInsets.all(16.0),
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: Colors.brown.shade700, // cor da borda
+            width: 2,
+          ),
+        ),
+        elevation: 8,
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
           child: SingleChildScrollView(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Editar Cupom', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Icon(Icons.edit, color: Colors.brown.shade700, size: 28),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Editar Cupom',
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.brown.shade700,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
                 _buildTextField('Código', codigoControllerModal),
                 _buildTextField('Descrição', descricaoControllerModal),
                 _buildTextField('Desconto', descontoControllerModal, keyboardType: TextInputType.number),
@@ -336,25 +499,32 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
                 _buildTextField('Data de Validade', validadeControllerModal, 
                   keyboardType: TextInputType.number,
                   useMask: true),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    final dados = {
-                      'codigo': codigoControllerModal.text,
-                      'descricao': descricaoControllerModal.text,
-                      'desconto': double.tryParse(descontoControllerModal.text) ?? 0,
-                      'tipo_desconto': tipoDesconto,
-                      'data_validade': validadeControllerModal.text,
-                    };
-                    Navigator.pop(context);
-                    atualizarCupom(cupom['idCupom'], dados);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.brown.shade700,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.save, color: Colors.white),
+                    label: const Text('Salvar Alterações', style: TextStyle(fontSize: 16)),
+                    onPressed: () {
+                      final descontoStr = descontoControllerModal.text.replaceAll(',', '.');
+                      final dados = {
+                        'codigo': codigoControllerModal.text,
+                        'descricao': descricaoControllerModal.text,
+                        'desconto': double.tryParse(descontoStr) ?? 0,
+                        'tipo_desconto': tipoDesconto,
+                        'data_validade': validadeControllerModal.text,
+                      };
+                      Navigator.pop(context);
+                      atualizarCupom(cupom['idCupom'], dados);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.brown.shade700,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 4,
+                    ),
                   ),
-                  child: const Text('Salvar Alterações'),
                 ),
               ],
             ),
@@ -483,19 +653,67 @@ class _ViewDeleteCouponScreenState extends State<ViewDeleteCouponScreen> {
                                               onPressed: () {
                                                 showDialog(
                                                   context: context,
-                                                  builder: (_) => AlertDialog(
-                                                    title: const Text('Remover Cupom'),
-                                                    content: Text('Deseja realmente remover o cupom "${cupom['codigo']}"?'),
-                                                    actions: [
-                                                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          Navigator.pop(context);
-                                                          deletarCupom(cupom['idCupom']);
-                                                        },
-                                                        child: const Text('Remover', style: TextStyle(color: Colors.red)),
+                                                  builder: (_) => Dialog(
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.circular(24),
+                                                      side: BorderSide(
+                                                        color: Colors.red.shade700,
+                                                        width: 2,
                                                       ),
-                                                    ],
+                                                    ),
+                                                    elevation: 8,
+                                                    backgroundColor: Colors.white,
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.all(24.0),
+                                                      child: Column(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 40),
+                                                          const SizedBox(height: 16),
+                                                          Text(
+                                                            'Remover Cupom',
+                                                            style: GoogleFonts.poppins(
+                                                              fontSize: 20,
+                                                              fontWeight: FontWeight.bold,
+                                                              color: Colors.red.shade700,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(height: 12),
+                                                          Text(
+                                                            'Deseja realmente remover o cupom "${cupom['codigo']}"?',
+                                                            textAlign: TextAlign.center,
+                                                            style: GoogleFonts.poppins(fontSize: 16),
+                                                          ),
+                                                          const SizedBox(height: 24),
+                                                          Row(
+                                                            children: [
+                                                              Expanded(
+                                                                child: TextButton(
+                                                                  onPressed: () => Navigator.pop(context),
+                                                                  child: const Text('Cancelar'),
+                                                                ),
+                                                              ),
+                                                              const SizedBox(width: 12),
+                                                              Expanded(
+                                                                child: ElevatedButton(
+                                                                  onPressed: () {
+                                                                    Navigator.pop(context);
+                                                                    deletarCupom(cupom['idCupom']);
+                                                                  },
+                                                                  style: ElevatedButton.styleFrom(
+                                                                    backgroundColor: Colors.red.shade700,
+                                                                    foregroundColor: Colors.white,
+                                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                                    elevation: 2,
+                                                                  ),
+                                                                  child: const Text('Remover'),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
                                                   ),
                                                 );
                                               },

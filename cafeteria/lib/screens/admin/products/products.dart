@@ -2,10 +2,39 @@ import 'package:flutter/material.dart';
 import 'add_product_screen.dart';
 import 'view_delete_product_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:cafeteria/screens/global/config.dart' as GlobalConfig;
 
-class ProductsScreen extends StatelessWidget {
+String get baseUrl => GlobalConfig.GlobalConfig.api();
+class ProductsScreen extends StatefulWidget {
   final Map<String, dynamic> adminData;
   const ProductsScreen({super.key, required this.adminData});
+
+  @override
+  State<ProductsScreen> createState() => _ProductsScreenState();
+}
+
+class _ProductsScreenState extends State<ProductsScreen> {
+  List<Map<String, dynamic>> todosProdutos = [];
+  final int limiteBaixa = 5;
+
+  @override
+  void initState() {
+    super.initState();
+    buscarProdutos();
+  }
+
+  Future<void> buscarProdutos() async {
+    final response = await http.get(Uri.parse('$baseUrl/produtos'));
+    if (response.statusCode == 200) {
+      final List produtos = json.decode(response.body);
+      setState(() {
+        todosProdutos = List<Map<String, dynamic>>.from(produtos);
+      });
+      
+    }
+  }
 
   Widget _buildTopicTile({
     required BuildContext context,
@@ -78,9 +107,13 @@ class ProductsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final adminId = adminData['id'] ?? 1;
-    final adminName = adminData['nome'] ?? 'Desconhecido';
-    final adminEmail = adminData['email'] ?? 'Sem email';
+    final produtosBaixaEstoque = todosProdutos
+        .where((p) => (int.tryParse(p['quantidade_estoque'].toString()) ?? 0) < limiteBaixa)
+        .toList();
+
+    final adminId = widget.adminData['id'] ?? 1;
+    final adminName = widget.adminData['nome'] ?? 'Desconhecido';
+    final adminEmail = widget.adminData['email'] ?? 'Sem email';
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -158,7 +191,9 @@ class ProductsScreen extends StatelessWidget {
                             },
                           ),
                         ),
-                      );
+                      ).then((_) {
+                        buscarProdutos(); // Atualiza ao voltar
+                      });
                     },
                   ),
                   _buildTopicTile(
@@ -172,7 +207,9 @@ class ProductsScreen extends StatelessWidget {
                         MaterialPageRoute(
                           builder: (context) => const ViewDeleteProductScreen(),
                         ),
-                      );
+                      ).then((_) {
+                        buscarProdutos(); // Atualiza ao voltar
+                      });
                     },
                   ),
 
@@ -241,6 +278,38 @@ class ProductsScreen extends StatelessWidget {
                       ],
                     ),
                   ),
+
+                  // Após o card informativo "Dica"
+                  if (produtosBaixaEstoque.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      margin: const EdgeInsets.only(top: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.red.shade200,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 28),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Atenção: Existem produtos com baixa em estoque! Verifique e reponha para evitar falta no cardápio.',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.red.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
