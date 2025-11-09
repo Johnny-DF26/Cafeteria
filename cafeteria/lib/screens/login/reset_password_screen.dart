@@ -305,14 +305,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: _errorMessage!.contains('bloqueada') 
-                                  ? Colors.red.shade100 
+                              color: _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
+                                  ? Colors.red.shade100
                                   : (_errorMessage!.contains('tentativa')
                                       ? Colors.orange.shade50
                                       : Colors.red.shade50),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: _errorMessage!.contains('bloqueada')
+                                color: _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
                                     ? Colors.red.shade700
                                     : (_errorMessage!.contains('tentativa')
                                         ? Colors.orange.shade700
@@ -324,12 +324,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Icon(
-                                  _errorMessage!.contains('bloqueada')
+                                  _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
                                       ? Icons.block_rounded
                                       : (_errorMessage!.contains('tentativa')
                                           ? Icons.warning_amber_rounded
                                           : Icons.error_outline_rounded),
-                                  color: _errorMessage!.contains('bloqueada')
+                                  color: _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
                                       ? Colors.red.shade700
                                       : (_errorMessage!.contains('tentativa')
                                           ? Colors.orange.shade700
@@ -342,13 +342,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        _errorMessage!.contains('bloqueada')
+                                        _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
                                             ? '🔒 Conta Bloqueada'
                                             : (_errorMessage!.contains('tentativa')
                                                 ? '⚠️ Atenção'
                                                 : '❌ Erro'),
                                         style: TextStyle(
-                                          color: _errorMessage!.contains('bloqueada')
+                                          color: _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
                                               ? Colors.red.shade900
                                               : (_errorMessage!.contains('tentativa')
                                                   ? Colors.orange.shade900
@@ -362,7 +362,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                       Text(
                                         _errorMessage!,
                                         style: TextStyle(
-                                          color: _errorMessage!.contains('bloqueada')
+                                          color: _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
                                               ? Colors.red.shade800
                                               : (_errorMessage!.contains('tentativa')
                                                   ? Colors.orange.shade800
@@ -371,7 +371,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                           fontFamily: 'Poppins',
                                         ),
                                       ),
-                                      if (_errorMessage!.contains('tentativa')) ...[
+                                      // Só mostra barra de progresso se NÃO estiver bloqueada/inativa
+                                      if (_errorMessage!.contains('tentativa') &&
+                                          !_errorMessage!.contains('bloqueada') &&
+                                          !_errorMessage!.contains('inativa')) ...[
                                         const SizedBox(height: 8),
                                         ClipRRect(
                                           borderRadius: BorderRadius.circular(4),

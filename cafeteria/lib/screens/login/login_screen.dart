@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:cafeteria/screens/global/user_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -23,11 +22,86 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscure = true;
   String? _errorMessage;
 
-  // AJUSTE AQUI: Mude este valor para ampliar/reduzir a imagem
-  // Valores menores = imagem menor
-  // Valores maiores = imagem maior
-  // Exemplo: 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, etc.
+  // Limite de tentativas
+  int _tentativasLogin = 0;
+  final int _maxTentativas = 5;
+
+  // Escala da imagem
   static const double imageScale = 1.17;
+
+  double _getTentativasProgress() {
+    return (_tentativasLogin / _maxTentativas).clamp(0.0, 1.0);
+  }
+
+  void _showBlockedAccountDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.block, color: Colors.red.shade700, size: 32),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Conta Bloqueada',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Sua conta foi bloqueada por excesso de tentativas inválidas de login.',
+              style: TextStyle(fontSize: 15, fontFamily: 'Poppins'),
+            ),
+            SizedBox(height: 16),
+            Text(
+              '📧 Entre em contato com o suporte:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+              ),
+            ),
+            SizedBox(height: 8),
+            Text('• Email: suporte@cafegourmet.com', style: TextStyle(fontFamily: 'Poppins')),
+            Text('• Telefone: (XX) XXXXX-XXXX', style: TextStyle(fontFamily: 'Poppins')),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const ChooseProfileScreen()),
+              );
+            },
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.brown.shade700,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text(
+              'ENTENDI',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -40,6 +114,15 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
 
+    // Se já atingiu o limite, mostra card suspenso e card vermelho
+    if (_tentativasLogin >= _maxTentativas) {
+      setState(() {
+        _errorMessage = 'Conta bloqueada por excesso de tentativas. Tente novamente mais tarde.';
+      });
+      _showBlockedAccountDialog(); // Suspenso só quando bloquear agora!
+      return;
+    }
+
     setState(() {
       _loading = true;
       _errorMessage = null;
@@ -51,24 +134,40 @@ class _LoginScreenState extends State<LoginScreen> {
         _passCtrl.text.trim(),
       );
 
-      // ⚡ Verifica se o usuário está ativo (aceita diversos formatos)
       final status = userData['status'];
       final isActive = status == 1 || status == '1' || status == true || status == 'ativo' || status == 'Ativo';
 
       if (!isActive) {
         setState(() => _errorMessage = 'Sua conta está inativa. Entre em contato com o administrador.');
+        // NÃO chama o dialog aqui, só mostra o card vermelho!
         return;
       }
 
       if (!mounted) return;
-      
-      // Adiciona o usuário no Provider
       Provider.of<UserProvider>(context, listen: false).setUser(userData);
-
-      // Navega para a Home
+      setState(() {
+        _tentativasLogin = 0;
+      });
       Navigator.pushReplacementNamed(context, Routes.home);
     } on AuthException catch (e) {
-      setState(() => _errorMessage = e.message);
+      if (e.message.contains('bloqueada')) {
+        setState(() => _errorMessage = e.message);
+        // NÃO chama o dialog aqui, só mostra o card vermelho!
+      } else if (e.message.contains('inativa')) {
+        setState(() => _errorMessage = e.message);
+        // NÃO chama o dialog aqui, só mostra o card vermelho!
+      } else {
+        setState(() {
+          _tentativasLogin++;
+          int restantes = (_maxTentativas - _tentativasLogin);
+          if (restantes > 0) {
+            _errorMessage = '${e.message}\nRestam $restantes tentativa${restantes > 1 ? 's' : ''}.';
+          } else {
+            _errorMessage = 'Conta bloqueada por excesso de tentativas. Tente novamente mais tarde.';
+            _showBlockedAccountDialog(); // Suspenso só quando bloquear agora!
+          }
+        });
+      }
     } catch (_) {
       setState(() => _errorMessage = 'Erro inesperado. Tente novamente.');
     } finally {
@@ -159,20 +258,102 @@ class _LoginScreenState extends State<LoginScreen> {
                         const Text('Faça seu Login',
                             style: TextStyle(color: Colors.black54)),
 
+                        // No build, mantenha o card vermelho igual ao reset:
                         if (_errorMessage != null) ...[
-                          const SizedBox(height: 12),
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.red.shade50,
-                              borderRadius: BorderRadius.circular(8),
+                              color: _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
+                                  ? Colors.red.shade100
+                                  : (_errorMessage!.contains('tentativa')
+                                      ? Colors.orange.shade50
+                                      : Colors.red.shade50),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
+                                    ? Colors.red.shade700
+                                    : (_errorMessage!.contains('tentativa')
+                                        ? Colors.orange.shade700
+                                        : Colors.red.shade700),
+                                width: 2,
+                              ),
                             ),
-                            child: Text(
-                              _errorMessage!,
-                              style: TextStyle(color: Colors.red.shade700),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
+                                      ? Icons.block_rounded
+                                      : (_errorMessage!.contains('tentativa')
+                                          ? Icons.warning_amber_rounded
+                                          : Icons.error_outline_rounded),
+                                  color: _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
+                                      ? Colors.red.shade700
+                                      : (_errorMessage!.contains('tentativa')
+                                          ? Colors.orange.shade700
+                                          : Colors.red.shade700),
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
+                                            ? '🔒 Conta Bloqueada'
+                                            : (_errorMessage!.contains('tentativa')
+                                                ? '⚠️ Atenção'
+                                                : '❌ Erro'),
+                                        style: TextStyle(
+                                          color: _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
+                                              ? Colors.red.shade900
+                                              : (_errorMessage!.contains('tentativa')
+                                                  ? Colors.orange.shade900
+                                                  : Colors.red.shade900),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          fontFamily: 'Poppins',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _errorMessage!,
+                                        style: TextStyle(
+                                          color: _errorMessage!.contains('bloqueada') || _errorMessage!.contains('inativa')
+                                              ? Colors.red.shade800
+                                              : (_errorMessage!.contains('tentativa')
+                                                  ? Colors.orange.shade800
+                                                  : Colors.red.shade800),
+                                          fontSize: 14,
+                                          fontFamily: 'Poppins',
+                                        ),
+                                      ),
+                                      // Só mostra barra de progresso se NÃO estiver bloqueada/inativa
+                                      if (_errorMessage!.contains('tentativa') &&
+                                          !_errorMessage!.contains('bloqueada') &&
+                                          !_errorMessage!.contains('inativa')) ...[
+                                        const SizedBox(height: 8),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(4),
+                                          child: LinearProgressIndicator(
+                                            value: _getTentativasProgress(),
+                                            minHeight: 6,
+                                            backgroundColor: Colors.orange.shade200,
+                                            valueColor: AlwaysStoppedAnimation<Color>(
+                                              Colors.orange.shade700,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+                          const SizedBox(height: 20),
                         ],
 
                         const SizedBox(height: 16),
