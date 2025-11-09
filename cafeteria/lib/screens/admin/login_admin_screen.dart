@@ -88,7 +88,7 @@ class _LoginAdminScreenState extends State<LoginAdminScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             child: const Text(
-              'ENTENDI',
+              'ENTENDIDO',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Poppins',
