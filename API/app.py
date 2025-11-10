@@ -80,14 +80,16 @@ def login():
         cursor.execute("SELECT * FROM usuario WHERE email = %s", (email,))
         user = cursor.fetchone()
 
-        # Se o usuário está bloqueado, retorna imediatamente e NÃO conta tentativas
+        # Se o usuário está bloqueado, retorna imediatamente e limpa tentativas
         if user and user.get('ativo') == 0:
+            tentativas_login.pop(email, None)
             return jsonify({'error': 'Conta bloqueada por excesso de tentativas. Entre em contato com o suporte.'}), 403
 
         # Inicializa contador de tentativas
         if email not in tentativas_login:
             tentativas_login[email] = 0
 
+        # Se senha correta, zera tentativas e faz login
         if user and user['senha'] == senha:
             tentativas_login[email] = 0
             conn.commit()
@@ -108,9 +110,11 @@ def login():
         tentativas_login[email] += 1
         tentativas_restantes = 5 - tentativas_login[email]
 
+        # Só bloqueia quando chegar em 5 tentativas
         if tentativas_login[email] >= 5:
             cursor.execute("UPDATE usuario SET ativo = 0 WHERE email = %s", (email,))
             conn.commit()
+            tentativas_login.pop(email, None)
             return jsonify({'error': 'Conta bloqueada por excesso de tentativas. Entre em contato com o suporte.'}), 403
 
         return jsonify({'error': f'Email ou senha inválidos. Restam {tentativas_restantes} tentativa(s).'}), 401
@@ -121,6 +125,7 @@ def login():
     finally:
         cursor.close()
         conn.close()
+
 
 # ------------------------
 # Login de Administrador

@@ -22,15 +22,13 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscure = true;
   String? _errorMessage;
 
-  // Limite de tentativas
-  int _tentativasLogin = 0;
-  final int _maxTentativas = 5;
+  int _tentativasRestantes = 5; // Valor padrão
 
   // Escala da imagem
   static const double imageScale = 1.17;
 
   double _getTentativasProgress() {
-    return (_tentativasLogin / _maxTentativas).clamp(0.0, 1.0);
+    return (5 - _tentativasRestantes) / 5;
   }
 
   void _showBlockedAccountDialog() {
@@ -114,15 +112,6 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
 
-    // Se já atingiu o limite, mostra card suspenso e card vermelho
-    if (_tentativasLogin >= _maxTentativas) {
-      setState(() {
-        _errorMessage = 'Conta bloqueada por excesso de tentativas. Tente novamente mais tarde.';
-      });
-      _showBlockedAccountDialog(); // Suspenso só quando bloquear agora!
-      return;
-    }
-
     setState(() {
       _loading = true;
       _errorMessage = null;
@@ -139,35 +128,30 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!isActive) {
         setState(() => _errorMessage = 'Sua conta está inativa. Entre em contato com o administrador.');
-        // NÃO chama o dialog aqui, só mostra o card vermelho!
         return;
       }
 
       if (!mounted) return;
       Provider.of<UserProvider>(context, listen: false).setUser(userData);
       setState(() {
-        _tentativasLogin = 0;
+        _tentativasRestantes = 5;
       });
       Navigator.pushReplacementNamed(context, Routes.home);
     } on AuthException catch (e) {
-      if (e.message.contains('bloqueada')) {
-        setState(() => _errorMessage = e.message);
-        // NÃO chama o dialog aqui, só mostra o card vermelho!
-      } else if (e.message.contains('inativa')) {
-        setState(() => _errorMessage = e.message);
-        // NÃO chama o dialog aqui, só mostra o card vermelho!
-      } else {
-        setState(() {
-          _tentativasLogin++;
-          int restantes = (_maxTentativas - _tentativasLogin);
-          if (restantes > 0) {
-            _errorMessage = '${e.message}\nRestam $restantes tentativa${restantes > 1 ? 's' : ''}.';
-          } else {
-            _errorMessage = 'Conta bloqueada por excesso de tentativas. Tente novamente mais tarde.';
-            _showBlockedAccountDialog(); // Suspenso só quando bloquear agora!
-          }
-        });
-      }
+      setState(() {
+        _errorMessage = e.message;
+
+        // Extrai tentativas restantes da mensagem da API
+        final match = RegExp(r'Restam (\d+) tentativa').firstMatch(e.message);
+        if (match != null) {
+          _tentativasRestantes = int.tryParse(match.group(1) ?? '5') ?? 5;
+        }
+
+        // Se bloqueada, mostra o dialog e navega
+        if (e.message.contains('bloqueada')) {
+          _showBlockedAccountDialog();
+        }
+      });
     } catch (_) {
       setState(() => _errorMessage = 'Erro inesperado. Tente novamente.');
     } finally {
