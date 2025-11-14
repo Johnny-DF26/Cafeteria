@@ -59,7 +59,6 @@ def criar_usuario():
 # ------------------------
 # Login de Usuário
 # ------------------------
-# Dicionário para controlar tentativas (em produção use Redis ou banco)
 tentativas_login = {}
 
 @app.route('/login', methods=['POST'])
@@ -92,6 +91,8 @@ def login():
         # Se senha correta, zera tentativas e faz login
         if user and user['senha'] == senha:
             tentativas_login[email] = 0
+            # Atualiza o campo data_ultimo_acesso
+            cursor.execute("UPDATE usuario SET data_ultimo_acesso = NOW() WHERE email = %s", (email,))
             conn.commit()
             return jsonify({
                 'message': 'Login bem-sucedido:',

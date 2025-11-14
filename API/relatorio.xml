@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="11" time="1.401" timestamp="2025-11-12T15:40:20.187928-03:00" hostname="Notebook_Dell"><testcase classname="test_app" name="test_cadastro_usuario" time="0.227" /><testcase classname="test_app" name="test_login_usuario" time="0.063" /><testcase classname="test_app" name="test_login_admin" time="0.064" /><testcase classname="test_app" name="test_reset_password" time="0.068" /><testcase classname="test_app" name="test_update_password" time="0.064" /><testcase classname="test_app" name="test_get_endereco" time="0.070" /><testcase classname="test_app" name="test_add_endereco" time="0.062"><failure message="mysql.connector.errors.IntegrityError: 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`cafeteria`.`endereco`, CONSTRAINT `endereco_ibfk_1` FOREIGN KEY (`Usuario_idUsuario`) REFERENCES `usuario` (`idUsuario`))">client = &lt;FlaskClient &lt;Flask 'app'&gt;&gt;
+
+    def test_add_endereco(client):
+        payload = {
+            "Usuario_idUsuario": 1,
+            "logradouro": "Rua Teste",
+            "numero": "123",
+            "bairro": "Centro",
+            "cidade": "Cidade",
+            "estado": "UF",
+            "cep": "12345678",
+            "complemento": "Apto 1",
+            "referencia": "Próximo à praça"
+        }
+&gt;       response = client.post("/add_endereco", json=payload)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_app.py:78: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+venv\Lib\site-packages\werkzeug\test.py:1167: in post
+    return self.open(*args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\flask\testing.py:235: in open
+    response = super().open(
+venv\Lib\site-packages\werkzeug\test.py:1116: in open
+    response_parts = self.run_wsgi_app(request.environ, buffered=buffered)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\werkzeug\test.py:988: in run_wsgi_app
+    rv = run_wsgi_app(self.application, environ, buffered=buffered)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\werkzeug\test.py:1264: in run_wsgi_app
+    app_rv = app(environ, start_response)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\flask\app.py:1536: in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\flask\app.py:1514: in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\flask_cors\extension.py:176: in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\flask\app.py:1511: in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\flask\app.py:919: in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\flask_cors\extension.py:176: in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\flask\app.py:917: in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\flask\app.py:902: in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app.py:239: in add_endereco
+    cur.execute(query, values)
+venv\Lib\site-packages\mysql\connector\cursor.py:416: in execute
+    self._connection.cmd_query(
+venv\Lib\site-packages\mysql\connector\opentelemetry\context_propagation.py:97: in wrapper
+    return method(cnx, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\mysql\connector\_decorating.py:89: in handle_cnx_method
+    raise err
+venv\Lib\site-packages\mysql\connector\_decorating.py:85: in handle_cnx_method
+    return cnx_method(cnx, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv\Lib\site-packages\mysql\connector\connection.py:984: in cmd_query
+    result = self._handle_result(
+venv\Lib\site-packages\mysql\connector\_decorating.py:89: in handle_cnx_method
+    raise err
+venv\Lib\site-packages\mysql\connector\_decorating.py:85: in handle_cnx_method
+    return cnx_method(cnx, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;mysql.connector.connection.MySQLConnection object at 0x000002759FE66F90&gt;
+packet = bytearray(b'\xc5\x00\x00\x01\xff\xac\x05#23000Cannot add or update a child row: a foreign key constraint fails (`cafeteria`.`endereco`, CONSTRAINT `endereco_ibfk_1` FOREIGN KEY (`Usuario_idUsuario`) REFERENCES `usuario` (`idUsuario`))')
+read_timeout = None, write_timeout = None
+
+    @handle_read_write_timeout()
+    def _handle_result(
+        self,
+        packet: bytes,
+        read_timeout: Optional[int] = None,
+        write_timeout: Optional[int] = None,
+    ) -&gt; ResultType:
+        """Handle a MySQL Result
+    
+        This method handles a MySQL result, for example, after sending the
+        query command. OK and EOF packets will be handled and returned. If
+        the packet is an Error packet, an Error-exception will be
+        raised.
+    
+        The dictionary returned of:
+        - columns: column information
+        - eof: the EOF-packet information
+    
+        Returns a dict()
+        """
+        if not packet or len(packet) &lt; 4:
+            raise InterfaceError("Empty response")
+        if packet[4] == OK_STATUS:
+            return self._handle_ok(packet)
+        if packet[4] == LOCAL_INFILE_STATUS:
+            filename = packet[5:].decode()
+            return self._handle_load_data_infile(filename, read_timeout, write_timeout)
+        if packet[4] == EOF_STATUS:
+            return self._handle_eof(packet)
+        if packet[4] == ERR_STATUS:
+&gt;           raise get_exception(packet)
+E           mysql.connector.errors.IntegrityError: 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`cafeteria`.`endereco`, CONSTRAINT `endereco_ibfk_1` FOREIGN KEY (`Usuario_idUsuario`) REFERENCES `usuario` (`idUsuario`))
+
+venv\Lib\site-packages\mysql\connector\connection.py:745: IntegrityError</failure></testcase><testcase classname="test_app" name="test_update_endereco" time="0.089" /><testcase classname="test_app" name="test_delete_endereco" time="0.090" /><testcase classname="test_app" name="test_get_usuario" time="0.067" /><testcase classname="test_app" name="test_update_usuario" time="0.064" /></testsuite></testsuites>
